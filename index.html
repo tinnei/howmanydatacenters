@@ -205,6 +205,26 @@ const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),tooltip=document.get
 const tipName=document.getElementById('tipname'),tipDetail=document.getElementById('tipdetail');
 const tipStatus=document.getElementById('tipstatus'),tipMore=document.getElementById('tipmore');
 const tipSource=document.getElementById('tipsource');
+// A crisp halo tracks the hovered/selected marker without changing the data dot.
+const halo=new THREE.Mesh(
+  new THREE.RingGeometry(.019,.027,32),
+  new THREE.MeshBasicMaterial({color:0x2474dc,side:THREE.DoubleSide,depthTest:true,depthWrite:false})
+);
+halo.visible=false;halo.renderOrder=3;scene.add(halo);
+const instanceMatrix=new THREE.Matrix4(),instancePosition=new THREE.Vector3();
+function outlineMarker(hit){
+if(!hit){halo.visible=false;return;}
+const [group,index]=hit.id.split(':').map(Number),mesh=dots[group];
+if(!mesh){halo.visible=false;return;}
+mesh.getMatrixAt(index,instanceMatrix);
+instancePosition.setFromMatrixPosition(instanceMatrix);
+mesh.localToWorld(instancePosition);
+halo.position.copy(instancePosition);
+halo.position.addScaledVector(instancePosition.clone().normalize(),.015);
+halo.material.color.setHex(hit.p._kind==='upcoming'?0x78aee9:hit.p._kind==='unknown'?0x8396a7:0x2474dc);
+halo.visible=true;
+}
+
 let downX=0,downY=0,dragged=false,pinned=false,lastHover=null;
 function clean(value){return value==null?'':String(value).trim();}
 function first(p,keys){for(const k of keys){if(clean(p[k]))return clean(p[k]);}return '';}
@@ -228,6 +248,7 @@ tooltip.style.left=Math.max(14,Math.min(e.clientX+16,innerWidth-width-14))+'px';
 tooltip.style.top=Math.max(14,Math.min(e.clientY+16,innerHeight-height-14))+'px';
 }
 function showSite(hit,e,lock){
+outlineMarker(hit);
 const p=hit.p;
 tipName.textContent=label(p);
 tipDetail.textContent=display(p);
@@ -250,14 +271,14 @@ tipSource.hidden=!url;if(url)tipSource.href=url;else tipSource.removeAttribute('
 pinned=lock;tooltip.classList.toggle('pinned',lock);
 tooltip.classList.add('visible');placeTooltip(e);
 }
-function hide(){pinned=false;lastHover=null;tooltip.classList.remove('visible','pinned');}
+function hide(){pinned=false;lastHover=null;halo.visible=false;tooltip.classList.remove('visible','pinned');}
 renderer.domElement.addEventListener('pointerdown',e=>{downX=e.clientX;downY=e.clientY;dragged=false;controls.autoRotate=false;});
 renderer.domElement.addEventListener('pointermove',e=>{
 if(Math.hypot(e.clientX-downX,e.clientY-downY)>5)dragged=true;
 if(pinned||e.buttons)return;
 const hit=pick(e);
 renderer.domElement.style.cursor=hit?'pointer':'grab';
-if(!hit){lastHover=null;tooltip.classList.remove('visible');return;}
+if(!hit){lastHover=null;halo.visible=false;tooltip.classList.remove('visible');return;}
 if(hit.id!==lastHover){lastHover=hit.id;showSite(hit,e,false);}else placeTooltip(e);
 });
 renderer.domElement.addEventListener('pointerleave',()=>{if(!pinned)hide();});
@@ -270,7 +291,7 @@ document.getElementById('tipclose').addEventListener('click',hide);
 addEventListener('keydown',e=>{if(e.key==='Escape')hide();});
 function resize(){const w=innerWidth,h=innerHeight;camera.aspect=w/h;camera.fov=w<690?48:36;camera.updateProjectionMatrix();const headerTop=document.querySelector('header').getBoundingClientRect().top;const footerTop=document.querySelector('footer').getBoundingClientRect().top;const available=Math.max(240,footerTop-headerTop-24);const desired=Math.max(180,Math.min(h*.72,available)-20);const fov=camera.fov*Math.PI/180;const distance=R/Math.sin(Math.atan(desired/h*Math.tan(fov/2)*2));camera.position.setLength(Math.max(5.95,distance));controls.minDistance=2.8;renderer.setSize(w,h);}
 addEventListener('resize',resize);resize();
-(function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera);})();
+(function animate(){requestAnimationFrame(animate);controls.update();if(halo.visible)halo.quaternion.copy(camera.quaternion);renderer.render(scene,camera);})();
 </script>
 </body>
 </html>
