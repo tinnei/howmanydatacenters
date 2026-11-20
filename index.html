@@ -37,6 +37,7 @@ a:hover{color:#242524;border-color:#242524}
 .history-detail{margin-bottom:8px;color:#454b48;font-size:11px;line-height:1.5}
 .history-event,.history-location,.history-count{margin:0 0 4px}
 .history-location{color:#617572;font-weight:600}
+.history-count-label{color:#686e6b}
 .history-count strong{color:var(--ink);font-size:14px;font-variant-numeric:tabular-nums}
 .history-sources{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:10px}
 #tooltip{position:fixed;z-index:4;padding:15px 17px;background:#fff;border:1px solid #e8e8e8;box-shadow:0 10px 36px #22222213;border-radius:8px;width:min(285px,calc(100vw - 28px));pointer-events:none;opacity:0;transform:translateY(5px);transition:opacity .15s,transform .15s}
@@ -71,7 +72,7 @@ a:hover{color:#242524;border-color:#242524}
     <div aria-live="polite" aria-atomic="true">
       <p id="history-event" class="history-event"></p>
       <p id="history-location" class="history-location" hidden></p>
-      <p id="history-count" class="history-count" hidden><strong id="history-count-value"></strong> <span id="history-count-scope"></span></p>
+      <p id="history-count" class="history-count" hidden><span class="history-count-label">Published industry count · </span><strong id="history-count-value"></strong> <span id="history-count-scope"></span></p>
     </div>
     <div class="history-sources">
       <a id="history-source" target="_blank" rel="noopener noreferrer"></a>
@@ -277,7 +278,7 @@ function updateCount(){
   if(historical){
     total.hidden=true;
     count.textContent=historicalGroup.mesh.count.toLocaleString();
-    unit.textContent='documented historical sites';
+    unit.textContent='example sites on globe';
     return;
   }
   unit.textContent=activeContinent?'mapped sites in '+activeContinent:'mapped sites';
