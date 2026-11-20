@@ -14,7 +14,7 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#fff;color:
 #globe:active{cursor:grabbing}
 header{position:absolute;z-index:2;top:clamp(27px,5vw,70px);left:clamp(24px,5.5vw,94px);pointer-events:none}
 .eyebrow{font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:#a4a5a4;font-weight:600;margin-bottom:17px}
-h1{font-size:clamp(34px,4.6vw,64px);font-weight:440;letter-spacing:-.048em;line-height:1.04;margin:0;max-width:540px}
+h1{font-size:clamp(34px,4.6vw,64px);font-weight:440;letter-spacing:-.048em;line-height:.91;margin:0;max-width:540px}
 .sub{font-size:12px;line-height:1.8;color:#999b99;margin-top:17px;max-width:300px}
 .metric{position:absolute;z-index:2;top:clamp(29px,5vw,70px);right:clamp(24px,5.5vw,94px);text-align:right;pointer-events:none}
 .utc-clock{font-size:12px;letter-spacing:.06em;font-variant-numeric:tabular-nums;color:#707774;margin-bottom:13px}.count{font-size:clamp(30px,4.3vw,60px);letter-spacing:-.065em;font-weight:430;font-variant-numeric:tabular-nums}
@@ -29,7 +29,7 @@ a:hover{color:#242524;border-color:#242524}
 #tooltip strong{display:block;font-size:12px;font-weight:550;line-height:1.5}
 #tooltip span{display:block;color:#9b9d9b;font-size:10px;line-height:1.6;margin-top:4px}
 #status{position:fixed;bottom:50%;left:50%;transform:translate(-50%,190px);font-size:11px;color:#a4a5a4;letter-spacing:.02em;z-index:2;pointer-events:none;white-space:nowrap}
-@media(max-width:680px){header{top:24px}h1{font-size:34px;line-height:1.06;letter-spacing:-.045em}.sub{max-width:190px;font-size:11px}.metric{top:24px;bottom:auto;right:24px}.utc-clock{font-size:10px;margin-bottom:9px}.count{font-size:35px}footer{bottom:20px}.footnote{max-width:220px;font-size:9px}.control{display:none}#status{transform:translate(-50%,170px)}}
+@media(max-width:680px){header{top:24px}h1{font-size:34px;line-height:.94;letter-spacing:-.045em}.sub{max-width:190px;font-size:11px}.metric{top:24px;bottom:auto;right:24px}.utc-clock{font-size:10px;margin-bottom:9px}.count{font-size:35px}footer{bottom:20px}.footnote{max-width:220px;font-size:9px}.control{display:none}#status{transform:translate(-50%,170px)}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 </head>
@@ -61,7 +61,7 @@ tickClock();setInterval(tickClock,1000);
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0xffffff);
 const camera=new THREE.PerspectiveCamera(36,innerWidth/innerHeight,.1,100);
-camera.position.set(0,0,5.9);
+camera.position.set(0,0,6.25);
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'default'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.setSize(innerWidth,innerHeight);
@@ -221,7 +221,7 @@ tooltip.classList.add('visible');
 });
 renderer.domElement.addEventListener('pointerdown',()=>tooltip.classList.remove('visible'));
 addEventListener('keydown',e=>{if(e.key==='Escape')tooltip.classList.remove('visible');});
-function resize(){const w=innerWidth,h=innerHeight;camera.aspect=w/h;camera.fov=w<690?48:36;camera.updateProjectionMatrix();renderer.setSize(w,h);}
+function resize(){const w=innerWidth,h=innerHeight;camera.aspect=w/h;camera.fov=w<690?48:36;camera.updateProjectionMatrix();const headerTop=document.querySelector('header').getBoundingClientRect().top;const footerTop=document.querySelector('footer').getBoundingClientRect().top;const available=Math.max(240,footerTop-headerTop-24);const desired=Math.min(h*.72,available);const fov=camera.fov*Math.PI/180;const distance=R/Math.sin(Math.atan(desired/h*Math.tan(fov/2)*2));camera.position.setLength(Math.max(5.95,distance));controls.minDistance=2.8;renderer.setSize(w,h);}
 addEventListener('resize',resize);resize();
 (function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera);})();
 </script>
