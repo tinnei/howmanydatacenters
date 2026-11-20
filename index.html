@@ -26,7 +26,6 @@ a{color:#747774;text-decoration:none;border-bottom:1px solid #d5d7d5}
 a:hover{color:#242524;border-color:#242524}
 .control{font-size:10px;color:#a4a5a4;letter-spacing:.03em;white-space:nowrap}
 .history{width:min(360px,100%);min-width:0}
-.history h2{margin:0 0 8px;font-size:10px;letter-spacing:.13em;text-transform:uppercase;font-weight:600;color:#686e6b}
 .history-ticks{position:relative;display:grid;grid-template-columns:repeat(var(--ticks),minmax(0,1fr))}
 .history-ticks::before{content:"";position:absolute;top:9px;left:calc(50% / var(--ticks));right:calc(50% / var(--ticks));border-top:1px solid #d5d9d7;pointer-events:none}
 .history-ticks button{position:relative;border:0;background:none;padding:6px 0 5px;color:#6d7471;cursor:pointer;font:inherit;font-size:10px;font-variant-numeric:tabular-nums}
@@ -35,9 +34,10 @@ a:hover{color:#242524;border-color:#242524}
 .history-ticks button[aria-pressed="true"]::before{background:#617572;border-color:#617572}
 .history-ticks button:hover::before{border-color:#262726}
 .history-ticks button:focus-visible{outline:1px solid #617572;outline-offset:-1px;border-radius:4px}
-.history-detail{min-height:56px;margin-top:4px;color:#454b48;font-size:11px;line-height:1.5}
-.history-event{margin:0 0 2px}
-.history-source{font-size:10px}
+.history-detail{margin-bottom:8px;color:#454b48;font-size:11px;line-height:1.5}
+.history-event,.history-count{margin:0 0 4px}
+.history-count strong{color:var(--ink);font-size:14px;font-variant-numeric:tabular-nums}
+.history-sources{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:10px}
 #tooltip{position:fixed;z-index:4;padding:15px 17px;background:#fff;border:1px solid #e8e8e8;box-shadow:0 10px 36px #22222213;border-radius:8px;width:min(285px,calc(100vw - 28px));pointer-events:none;opacity:0;transform:translateY(5px);transition:opacity .15s,transform .15s}
 #tooltip.visible{opacity:1;transform:translateY(0)}#tooltip.pinned{pointer-events:auto}#tooltip .close{display:none;position:absolute;top:7px;right:9px;background:none;border:0;color:#8b9290;font-size:18px;cursor:pointer}#tooltip.pinned .close{display:block}#tooltip .tag{font-size:10px;color:#6d7775;margin-bottom:8px}#tooltip .more{font-size:10px;color:#8c9491;line-height:1.7;margin-top:9px}#tooltip .more:empty{display:none}#tooltip a{font-size:10px;display:inline-block;margin-top:8px}
 #tooltip strong{display:block;font-size:12px;font-weight:550;line-height:1.5}
@@ -63,13 +63,18 @@ a:hover{color:#242524;border-color:#242524}
 <div id="tooltip" role="status"><button class="close" id="tipclose" aria-label="Close site details">×</button><div class="tag" id="tipstatus"></div><strong id="tipname"></strong><span id="tipdetail"></span><div class="more" id="tipmore"></div><a id="tipsource" target="_blank" rel="noopener noreferrer" hidden>View source</a></div>
 <footer>
 <div class="footnote">Data: <a href="https://github.com/kiankyars/datacenter-atlas" target="_blank" rel="noopener noreferrer">Data Center Atlas</a> · CC BY 4.0 · <span style="color:#2474dc">●</span> operating · <span style="color:#b6d8fa">●</span> upcoming · <span style="color:#9aa7b6">●</span> unverified</div>
-<section class="history" aria-labelledby="history-title">
-  <h2 id="history-title">Data center timeline</h2>
-  <div class="history-ticks" id="history-ticks" role="group" aria-label="Choose a year"></div>
+<section class="history" aria-label="Data center history">
   <div class="history-detail">
-    <p id="history-event" class="history-event" aria-live="polite"></p>
-    <a id="history-source" class="history-source" target="_blank" rel="noopener noreferrer">Source</a>
+    <div aria-live="polite" aria-atomic="true">
+      <p id="history-event" class="history-event"></p>
+      <p class="history-count"><strong id="history-count-value"></strong> <span id="history-count-scope"></span></p>
+    </div>
+    <div class="history-sources">
+      <a id="history-source" target="_blank" rel="noopener noreferrer"></a>
+      <a id="history-count-source" target="_blank" rel="noopener noreferrer" hidden></a>
+    </div>
   </div>
+  <div class="history-ticks" id="history-ticks" role="group" aria-label="Choose a year"></div>
 </section>
 </footer>
 <script>
@@ -85,9 +90,33 @@ a:hover{color:#242524;border-color:#242524}
     [2016, '2011 · Facebook shares designs from its Oregon data center through the Open Compute Project.', 'Meta', 'https://about.fb.com/news/2011/04/facebook-launches-open-compute-project/'],
     ['Now', '2026 · The IEA reports rising electricity demand from data centers as AI use expands.', 'International Energy Agency', 'https://www.iea.org/news/data-centre-electricity-use-surged-in-2025-even-with-tightening-bottlenecks-driving-a-scramble-for-solutions']
   ];
+  // Published snapshots have different coverage. Each number stays with its own scope.
+  const countSnapshots = new Map([
+    [2006, {
+      value: '800+',
+      scope: 'carrier-grade colocation sites listed across 50 major markets · Feb 2006',
+      publisher: 'TeleGeography via DCD',
+      url: 'https://www.datacenterdynamics.com/en/news/telegeography-nyc-has-has-most-colocation-space/'
+    }],
+    [2016, {
+      value: '9,540',
+      scope: 'estimated colocation facilities worldwide · 2016',
+      publisher: 'European Commission, Fig. 14',
+      url: 'https://publications.jrc.ec.europa.eu/repository/bitstream/JRC118550/preliminary_report_eu_gpp_data_centres_-_v1.0_october2017_pubsy_1.pdf#page=87'
+    }],
+    ['Now', {
+      value: '13,373',
+      scope: 'data center listings in 185 countries · Nov 2026 snapshot',
+      publisher: 'Data Center Map',
+      url: 'https://www.datacentermap.com/datacenters/'
+    }]
+  ]);
   const ticks = document.getElementById('history-ticks');
   const event = document.getElementById('history-event');
   const source = document.getElementById('history-source');
+  const countValue = document.getElementById('history-count-value');
+  const countScope = document.getElementById('history-count-scope');
+  const countSource = document.getElementById('history-count-source');
   ticks.style.setProperty('--ticks', milestones.length);
   let selectedTick;
   const buttons = milestones.map(([year, description, publisher, url]) => {
@@ -101,8 +130,16 @@ a:hover{color:#242524;border-color:#242524}
       button.setAttribute('aria-pressed', 'true');
       selectedTick = button;
       event.textContent = description;
-      source.textContent = publisher + ' ↗';
+      source.textContent = publisher;
       source.href = url;
+      const snapshot = countSnapshots.get(year);
+      countValue.textContent = snapshot?.value ?? '';
+      countScope.textContent = snapshot?.scope ?? 'Worldwide count unavailable for this period';
+      countSource.hidden = !snapshot;
+      if(snapshot){
+        countSource.textContent = snapshot.publisher;
+        countSource.href = snapshot.url;
+      }
     });
     ticks.appendChild(button);
     return button;
