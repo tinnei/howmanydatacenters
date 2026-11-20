@@ -21,4 +21,6 @@ Serve the repository with any static HTTP server (for example `python3 -m http.s
 
 ## Interface
 
-Drag to rotate, scroll/pinch to zoom, click a data-center dot to see its public name and location. This first release deliberately avoids dashboards and filters.
+Drag to rotate, scroll/pinch to zoom, and click a dot to see its name, reported lifecycle status and observation date (when provided). Press Escape to dismiss. Automatic rotation is disabled when the visitor prefers reduced motion. This release deliberately avoids dashboards and filters.
+
+Blue markers mean at least one project at the site is reported operational; pale blue means a reported pre-operational project stage; gray-blue means no supported classification. These are **last reported statuses**, not live operational verification. A campus with multiple projects is counted once. Completed projects are not assumed operational, and research leads are not treated as construction. The displayed number is the count of mapped site records loaded, not the world's total.
