@@ -86,6 +86,31 @@ try{
 const r=await fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson');
 if(!r.ok)throw Error('Land data unavailable');
 const data=await r.json();
+// Fill only the land polygons with a very pale sage green; keep oceans white.
+const canvas=document.createElement('canvas');canvas.width=2048;canvas.height=1024;
+const ctx=canvas.getContext('2d');
+ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle='#eaf3e9';
+function paintRing(ring){
+if(!ring?.length)return;
+let prev=null;
+for(const point of ring){
+const x=(point[0]+180)/360*canvas.width,y=(90-point[1])/180*canvas.height;
+if(prev===null)ctx.moveTo(x,y);
+else if(Math.abs(x-prev)>canvas.width/2){ctx.lineTo(prev<canvas.width/2?0:canvas.width,y);ctx.moveTo(x<canvas.width/2?0:canvas.width,y);ctx.lineTo(x,y);}
+else ctx.lineTo(x,y);
+prev=x;
+}
+ctx.closePath();
+}
+for(const feature of data.features||[]){
+const g=feature.geometry;if(!g)continue;
+const shapes=g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[];
+for(const polygon of shapes){ctx.beginPath();for(const ring of polygon)paintRing(ring);ctx.fill('evenodd');}
+}
+const texture=new THREE.CanvasTexture(canvas);
+texture.colorSpace=THREE.SRGBColorSpace;
+sphere.material.map=texture;sphere.material.color.set(0xffffff);sphere.material.needsUpdate=true;
 const polys=[];
 for(const f of data.features||[]){const g=f.geometry;if(g?.type==='Polygon')polys.push(g.coordinates);else if(g?.type==='MultiPolygon')polys.push(...g.coordinates);}
 const points=[];
