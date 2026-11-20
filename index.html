@@ -109,7 +109,7 @@ function label(p){return p.name||p.site_name||p.facility_name||p.title||p.site_i
 function display(p){return [p.city||p.locality||p.location_name,p.country||p.country_name].filter(Boolean).join(', ')||'Publicly mapped location';}
 function parseCSV(text){
 const rows=[];let row=[],value='',quoted=false;
-for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){value+='"';i++;}else quoted=!quoted;}else if(c===','&&!quoted){row.push(value);value='';}else if((c==='\\n'||c==='\\r')&&!quoted){if(c==='\\r'&&text[i+1]==='\\n')i++;row.push(value);if(row.some(Boolean))rows.push(row);row=[];value='';}else value+=c;}
+for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){value+='"';i++;}else quoted=!quoted;}else if(c===','&&!quoted){row.push(value);value='';}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&text[i+1]==='\n')i++;row.push(value);if(row.some(Boolean))rows.push(row);row=[];value='';}else value+=c;}
 row.push(value);if(row.some(Boolean))rows.push(row);
 const header=rows.shift()||[];return rows.map(r=>Object.fromEntries(header.map((h,i)=>[h.trim(),r[i]||''])));
 }
