@@ -17,7 +17,7 @@ header{position:absolute;z-index:2;top:clamp(27px,5vw,70px);left:clamp(24px,5.5v
 h1{font-size:clamp(30px,4.8vw,68px);font-weight:440;letter-spacing:-.065em;line-height:1.05;margin:0}
 .sub{font-size:12px;line-height:1.8;color:#999b99;margin-top:17px;max-width:300px}
 .metric{position:absolute;z-index:2;top:clamp(29px,5vw,70px);right:clamp(24px,5.5vw,94px);text-align:right;pointer-events:none}
-.count{font-size:clamp(30px,4.3vw,60px);letter-spacing:-.065em;font-weight:430;font-variant-numeric:tabular-nums}
+.utc-clock{font-size:12px;letter-spacing:.06em;font-variant-numeric:tabular-nums;color:#707774;margin-bottom:13px}.count{font-size:clamp(30px,4.3vw,60px);letter-spacing:-.065em;font-weight:430;font-variant-numeric:tabular-nums}
 .unit{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:#a1a3a1;margin-top:5px}
 footer{position:absolute;left:clamp(24px,5.5vw,94px);right:clamp(24px,5.5vw,94px);bottom:clamp(22px,4vw,45px);display:flex;align-items:end;justify-content:space-between;z-index:2;gap:30px}
 .footnote{font-size:10px;line-height:1.9;color:#a4a5a4;max-width:380px}
@@ -29,7 +29,7 @@ a:hover{color:#242524;border-color:#242524}
 #tooltip strong{display:block;font-size:12px;font-weight:550;line-height:1.5}
 #tooltip span{display:block;color:#9b9d9b;font-size:10px;line-height:1.6;margin-top:4px}
 #status{position:fixed;bottom:50%;left:50%;transform:translate(-50%,190px);font-size:11px;color:#a4a5a4;letter-spacing:.02em;z-index:2;pointer-events:none;white-space:nowrap}
-@media(max-width:680px){header{top:24px}h1{font-size:32px}.sub{max-width:190px;font-size:11px}.metric{top:auto;bottom:94px;right:24px}.count{font-size:35px}footer{bottom:20px}.footnote{max-width:220px;font-size:9px}.control{display:none}#status{transform:translate(-50%,170px)}}
+@media(max-width:680px){header{top:24px}h1{font-size:32px}.sub{max-width:190px;font-size:11px}.metric{top:24px;bottom:auto;right:24px}.utc-clock{font-size:10px;margin-bottom:9px}.count{font-size:35px}footer{bottom:20px}.footnote{max-width:220px;font-size:9px}.control{display:none}#status{transform:translate(-50%,170px)}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 </head>
@@ -40,7 +40,7 @@ a:hover{color:#242524;border-color:#242524}
 <h1>how many<br/>data centers</h1>
 
 </header>
-<div class="metric" aria-live="polite">
+<div class="metric" aria-live="polite"><div id="utcClock" class="utc-clock">--:--:-- UTC</div>
 <div id="count" class="count">—</div>
 <div class="unit">mapped sites</div>
 </div>
@@ -55,6 +55,9 @@ import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
 const root=document.getElementById('globe'), status=document.getElementById('status');
+const clock=document.getElementById('utcClock');
+function tickClock(){clock.textContent=new Date().toISOString().slice(11,19)+' UTC';}
+tickClock();setInterval(tickClock,1000);
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0xffffff);
 const camera=new THREE.PerspectiveCamera(36,innerWidth/innerHeight,.1,100);
@@ -90,7 +93,7 @@ const data=await r.json();
 const canvas=document.createElement('canvas');canvas.width=2048;canvas.height=1024;
 const ctx=canvas.getContext('2d');
 ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);
-ctx.fillStyle='#eaf3e9';
+ctx.fillStyle='#eeeeee';
 function paintRing(ring){
 if(!ring?.length)return;
 let prev=null;
@@ -108,9 +111,41 @@ const g=feature.geometry;if(!g)continue;
 const shapes=g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[];
 for(const polygon of shapes){ctx.beginPath();for(const ring of polygon)paintRing(ring);ctx.fill('evenodd');}
 }
+const basePixels=ctx.getImageData(0,0,canvas.width,canvas.height);
 const texture=new THREE.CanvasTexture(canvas);
 texture.colorSpace=THREE.SRGBColorSpace;
 sphere.material.map=texture;sphere.material.needsUpdate=true;
+function updateSun(date){
+  // NOAA-style solar declination and equation-of-time approximation.
+  const start=Date.UTC(date.getUTCFullYear(),0,1);
+  const day=(date.getTime()-start)/86400000;
+  const gamma=2*Math.PI/365*(day+(date.getUTCHours()-12)/24);
+  const decl=.006918-.399912*Math.cos(gamma)+.070257*Math.sin(gamma)-.006758*Math.cos(2*gamma)+.000907*Math.sin(2*gamma)-.002697*Math.cos(3*gamma)+.00148*Math.sin(3*gamma);
+  const eq=229.18*(.000075+.001868*Math.cos(gamma)-.032077*Math.sin(gamma)-.014615*Math.cos(2*gamma)-.040849*Math.sin(2*gamma));
+  const utc=date.getUTCHours()*60+date.getUTCMinutes()+date.getUTCSeconds()/60;
+  const sunLon=(720-utc-eq)/4;
+  const latSin=Math.sin(decl),latCos=Math.cos(decl);
+  const out=new ImageData(new Uint8ClampedArray(basePixels.data),canvas.width,canvas.height);
+  const pixels=out.data;
+  for(let y=0;y<canvas.height;y++){
+    const lat=(90-(y+.5)*180/canvas.height)*Math.PI/180;
+    const a=Math.sin(lat)*latSin,b=Math.cos(lat)*latCos;
+    for(let x=0;x<canvas.width;x++){
+      const lon=(x+.5)*360/canvas.width-180;
+      const altitude=a+b*Math.cos((lon-sunLon)*Math.PI/180);
+      // A quiet twilight transition, with a cool gray nighttime tint.
+      const daylight=THREE.MathUtils.smoothstep(altitude,-.11,.09);
+      const shade=.78+.22*daylight;
+      const i=(y*canvas.width+x)*4;
+      pixels[i]=pixels[i]*shade;
+      pixels[i+1]=pixels[i+1]*shade;
+      pixels[i+2]=pixels[i+2]*shade;
+    }
+  }
+  ctx.putImageData(out,0,0);texture.needsUpdate=true;
+}
+updateSun(new Date());
+setInterval(()=>updateSun(new Date()),60000);
 const polys=[];
 for(const f of data.features||[]){const g=f.geometry;if(g?.type==='Polygon')polys.push(g.coordinates);else if(g?.type==='MultiPolygon')polys.push(...g.coordinates);}
 const bounded=polys.map(poly=>{const ring=poly[0]||[];return {poly,minLat:Math.min(...ring.map(p=>p[1])),maxLat:Math.max(...ring.map(p=>p[1])),minLon:Math.min(...ring.map(p=>p[0])),maxLon:Math.max(...ring.map(p=>p[0]))};});
