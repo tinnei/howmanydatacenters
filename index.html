@@ -18,6 +18,7 @@ h1{font-size:clamp(34px,4.6vw,64px);font-weight:440;letter-spacing:-.048em;line-
 .sub{font-size:12px;line-height:1.8;color:#999b99;margin-top:17px;max-width:300px}
 .metric{position:absolute;z-index:2;top:clamp(29px,5vw,70px);right:clamp(24px,5.5vw,94px);text-align:right;pointer-events:none}
 .utc-clock{font-size:12px;letter-spacing:.06em;font-variant-numeric:tabular-nums;color:#707774;margin-bottom:13px}.count{font-size:clamp(30px,4.3vw,60px);letter-spacing:-.065em;font-weight:430;font-variant-numeric:tabular-nums}
+.count{white-space:nowrap}.count-total{color:#767676;font-size:.56em;letter-spacing:-.03em}
 .continent-focus{position:absolute;top:clamp(32px,5vw,72px);left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#727a78;z-index:2;pointer-events:none;white-space:nowrap;transition:opacity .2s}.continent-focus:empty{opacity:0}.unit{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:#a1a3a1;margin-top:5px}
 footer{position:absolute;left:clamp(24px,5.5vw,94px);right:clamp(24px,5.5vw,94px);bottom:clamp(22px,4vw,45px);display:flex;align-items:end;justify-content:space-between;z-index:2;gap:30px}
 .footnote{font-size:10px;line-height:1.9;color:#a4a5a4;max-width:380px}
@@ -30,6 +31,7 @@ a:hover{color:#242524;border-color:#242524}
 #tooltip span{display:block;color:#9b9d9b;font-size:10px;line-height:1.6;margin-top:4px}
 #status{position:fixed;bottom:50%;left:50%;transform:translate(-50%,190px);font-size:11px;color:#a4a5a4;letter-spacing:.02em;z-index:2;pointer-events:none;white-space:nowrap}
 @media(max-width:680px){header{top:24px}h1{font-size:34px;line-height:.94;letter-spacing:-.045em}.sub{max-width:190px;font-size:11px}.metric{top:24px;bottom:auto;right:24px}.continent-focus{top:112px;font-size:10px}.utc-clock{font-size:10px;margin-bottom:9px}.count{font-size:35px}footer{bottom:20px}.footnote{max-width:220px;font-size:9px}.control{display:none}#status{transform:translate(-50%,170px)}}
+@media(max-width:440px){.metric{max-width:calc(100vw - 204px)}.count{font-size:clamp(24px,7.4vw,32px)}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 </head>
@@ -42,7 +44,7 @@ a:hover{color:#242524;border-color:#242524}
 </header>
 <div id="continentFocus" class="continent-focus" aria-live="polite"></div>
 <div class="metric" aria-live="polite"><div id="utcClock" class="utc-clock">--:--:-- UTC</div>
-<div id="count" class="count">—</div>
+<div class="count"><span id="count">—</span><span id="countTotal" class="count-total" hidden> / <span id="totalCount"></span></span></div>
 <div class="unit">mapped sites</div>
 </div>
 <div id="status">Loading locations…</div>
@@ -93,7 +95,7 @@ function xyz(lat,lon,r=R){const a=(90-lat)*Math.PI/180,b=(lon+180)*Math.PI/180;r
 const landDots=new THREE.Group();globe.add(landDots);
 const continentNames=['Africa','Antarctica','Asia','Europe','North America','Oceania','South America'];
 const continentOutlines=new Map();
-let countryPolygons=[],landMesh=null,landContinentIds=[],landPositions=[],siteGroups=[],activeContinent=null,siteTotal=0;
+let countryPolygons=[],landMesh=null,landContinentIds=[],landPositions=[],siteGroups=[],activeContinent=null,siteTotal=null;
 const focusLabel=document.getElementById('continentFocus');
 function continentName(properties,lookup){
 const code=String(properties['ISO3166-1-Alpha-2']||'').toUpperCase();
@@ -106,6 +108,20 @@ if(lat<item.minLat||lat>item.maxLat||lon<item.minLon||lon>item.maxLon)continue;
 if(inPolygon(lon,lat,item.poly))return item.continent;
 }
 return '';
+}
+function updateCount(){
+  const count=document.getElementById('count');
+  const total=document.getElementById('countTotal');
+  total.hidden=siteTotal===null;
+  if(siteTotal===null){
+    count.textContent='—';
+    return;
+  }
+  const visibleCount=activeContinent
+    ?siteGroups.reduce((sum,group)=>sum+group.items.filter(item=>item.continent===activeContinent).length,0)
+    :siteTotal;
+  count.textContent=visibleCount.toLocaleString();
+  document.getElementById('totalCount').textContent=siteTotal.toLocaleString();
 }
 function updateFocus(){
 if(!landPositions.length)return;
@@ -120,7 +136,7 @@ if(next===activeContinent)return;
 activeContinent=next;
 for(const [name,outline] of continentOutlines)outline.visible=name===next;
 focusLabel.textContent=next||'';
-document.getElementById('count').textContent=(next?siteGroups.reduce((sum,g)=>sum+g.items.filter(x=>x.continent===next).length,0):siteTotal).toLocaleString();
+updateCount();
 document.querySelector('.unit').textContent=next?'mapped sites in '+next:'mapped sites';
 if(landMesh){
 const normal=new THREE.Color(0xb9bdbb),highlight=new THREE.Color(0x929c99);
@@ -282,10 +298,11 @@ const dummy=new THREE.Object3D(),local=[];
 entries.forEach(({p,c},i)=>{dummy.position.copy(xyz(+c[1],+c[0],R+.025));dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);local.push({...p,_kind:kind});});
 mesh.instanceMatrix.needsUpdate=true;pins.add(mesh);dots.push(mesh);records.push(local);siteGroups.push({mesh,items:entries,color:colors[kind]});
 }
-const total=Object.values(groups).reduce((n,items)=>n+items.length,0);
-siteTotal=total;activeContinent=null;updateFocus();if(!activeContinent)document.getElementById('count').textContent=total.toLocaleString();
+siteTotal=Object.values(groups).reduce((n,items)=>n+items.length,0);
+activeContinent=null;
+if(landPositions.length)updateFocus();else updateCount();
 status.textContent='';
-}catch(error){console.error('Site data failed to load',error);status.textContent='Site data currently unavailable';document.getElementById('count').textContent='—';}
+}catch(error){console.error('Site data failed to load',error);status.textContent='Site data currently unavailable';siteTotal=null;updateCount();}
 }
 loadSites();
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),tooltip=document.getElementById('tooltip');
