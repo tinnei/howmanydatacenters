@@ -43,10 +43,10 @@ a:hover{color:#242524;border-color:#242524}
 #tooltip.visible{opacity:1;transform:translateY(0)}#tooltip.pinned{pointer-events:auto}#tooltip .close{display:none;position:absolute;top:7px;right:9px;background:none;border:0;color:#8b9290;font-size:18px;cursor:pointer}#tooltip.pinned .close{display:block}#tooltip .tag{font-size:10px;color:#6d7775;margin-bottom:8px}#tooltip .more{font-size:10px;color:#8c9491;line-height:1.7;margin-top:9px}#tooltip .more:empty{display:none}#tooltip a{font-size:10px;display:inline-block;margin-top:8px}
 #tooltip strong{display:block;font-size:12px;font-weight:550;line-height:1.5}
 #tooltip span{display:block;color:#9b9d9b;font-size:10px;line-height:1.6;margin-top:4px}
-#status{display:flex;align-items:center;gap:6px;position:fixed;bottom:50%;left:50%;transform:translate(-50%,190px);font-size:11px;color:#a4a5a4;letter-spacing:.02em;z-index:2;pointer-events:none;white-space:nowrap}
+#status{display:flex;align-items:center;gap:6px;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11px;color:#a4a5a4;letter-spacing:.02em;z-index:2;pointer-events:none;white-space:nowrap}
 .globe-loader{display:block;flex:none}.globe-loader[hidden]{display:none}
 @media(prefers-reduced-motion:reduce){.globe-loader{display:none}}
-@media(max-width:680px){header{top:24px}h1{font-size:34px;line-height:.94;letter-spacing:-.045em}.sub{max-width:190px;font-size:11px}.metric{top:24px;bottom:auto;right:24px}.utc-clock{font-size:10px;margin-bottom:9px}.count{font-size:35px}footer{bottom:20px;flex-direction:column-reverse;gap:7px}.footnote{align-self:start;max-width:220px;font-size:9px}.control{display:none}#status{transform:translate(-50%,170px)}}
+@media(max-width:680px){header{top:24px}h1{font-size:34px;line-height:.94;letter-spacing:-.045em}.sub{max-width:190px;font-size:11px}.metric{top:24px;bottom:auto;right:24px}.utc-clock{font-size:10px;margin-bottom:9px}.count{font-size:35px}footer{bottom:20px;flex-direction:column-reverse;gap:7px}.footnote{align-self:start;max-width:220px;font-size:9px}.control{display:none}}
 @media(max-width:440px){.metric{max-width:calc(100vw - 204px)}.count{font-size:clamp(24px,7.4vw,32px)}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
@@ -219,15 +219,36 @@ globe.add(edge);
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.enablePan=false;controls.enableDamping=true;controls.dampingFactor=.055;
 controls.minDistance=2.8;controls.maxDistance=9;controls.rotateSpeed=.52;controls.enableZoom=true;
-controls.autoRotate=!matchMedia('(prefers-reduced-motion: reduce)').matches;controls.autoRotateSpeed=.18;
+const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
+controls.autoRotate=!reducedMotion.matches;controls.autoRotateSpeed=.18;
 controls.target.set(0,0,0);
 function xyz(lat,lon,r=R){const a=(90-lat)*Math.PI/180,b=(lon+180)*Math.PI/180;return new THREE.Vector3(-r*Math.sin(a)*Math.cos(b),r*Math.cos(a),r*Math.sin(a)*Math.sin(b));}
-const milestoneMarker=new THREE.Mesh(
-  new THREE.RingGeometry(.035,.05,32),
-  new THREE.MeshBasicMaterial({color:0x617572})
+const markerBlue=0x2474dc;
+function makePulse(radius){
+  const pulse=new THREE.Mesh(
+    new THREE.CircleGeometry(radius,32),
+    new THREE.MeshBasicMaterial({color:markerBlue,transparent:true,opacity:.32,depthWrite:false})
+  );
+  pulse.renderOrder=3;
+  return pulse;
+}
+function animatePulse(pulse,elapsed,duration){
+  const progress=reducedMotion.matches ? .28 : (Math.max(0,elapsed)%duration)/duration;
+  pulse.scale.setScalar(1+1.8*progress);
+  pulse.material.opacity=.32*(1-progress)**1.5;
+}
+
+const milestoneMarker=new THREE.Group();
+const milestonePulse=makePulse(.032);
+const milestonePin=new THREE.Mesh(
+  new THREE.CircleGeometry(.023,32),
+  new THREE.MeshBasicMaterial({color:markerBlue,transparent:true,opacity:.78,depthWrite:false})
 );
+milestonePin.renderOrder=4;
+milestoneMarker.add(milestonePulse,milestonePin);
 milestoneMarker.visible=false;
 globe.add(milestoneMarker);
+let milestonePulseStart=0;
 // A quiet, evenly spaced pointillist land layer.
 const landDots=new THREE.Group();globe.add(landDots);
 const continentOutlines=new Map();
@@ -295,7 +316,7 @@ const base=new THREE.Color(group.color),muted=new THREE.Color(0xdce1e3);
 group.items.forEach((item,i)=>group.mesh.setColorAt(i,!next||item.continent===next?base:muted));
 if(group.mesh.instanceColor)group.mesh.instanceColor.needsUpdate=true;
 }
-halo.visible=false;if(typeof hide==='function')hide();
+hide();
 }
 function insideRing(x,y,ring){let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const a=ring[i],b=ring[j];if(((a[1]>y)!==(b[1]>y))&&(x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0]))inside=!inside;}return inside;}
 function inPolygon(lon,lat,poly){if(!poly?.length||!insideRing(lon,lat,poly[0]))return false;for(let i=1;i<poly.length;i++)if(insideRing(lon,lat,poly[i]))return false;return true;}
@@ -482,24 +503,20 @@ const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),tooltip=document.get
 const tipName=document.getElementById('tipname'),tipDetail=document.getElementById('tipdetail');
 const tipStatus=document.getElementById('tipstatus'),tipMore=document.getElementById('tipmore');
 const tipSource=document.getElementById('tipsource');
-// A crisp halo tracks the hovered/selected marker without changing the data dot.
-const halo=new THREE.Mesh(
-  new THREE.RingGeometry(.019,.027,32),
-  new THREE.MeshBasicMaterial({color:0x2474dc,side:THREE.DoubleSide,depthTest:true,depthWrite:false})
-);
-halo.visible=false;halo.renderOrder=3;scene.add(halo);
+const sitePulse=makePulse(.019);
+sitePulse.visible=false;
+scene.add(sitePulse);
+let sitePulseStart=0;
 const instanceMatrix=new THREE.Matrix4(),instancePosition=new THREE.Vector3();
-function outlineMarker(hit){
-if(!hit){halo.visible=false;return;}
-const [group,index]=hit.id.split(':').map(Number),mesh=dots[group];
-if(!mesh){halo.visible=false;return;}
-mesh.getMatrixAt(index,instanceMatrix);
-instancePosition.setFromMatrixPosition(instanceMatrix);
-mesh.localToWorld(instancePosition);
-halo.position.copy(instancePosition);
-halo.position.addScaledVector(instancePosition.clone().normalize(),.015);
-halo.material.color.setHex(hit.p._kind==='upcoming'?0x78aee9:hit.p._kind==='unknown'?0x8396a7:0x2474dc);
-halo.visible=true;
+function showSitePulse(hit){
+  const [group,index]=hit.id.split(':').map(Number);
+  const mesh=dots[group];
+  mesh.getMatrixAt(index,instanceMatrix);
+  instancePosition.setFromMatrixPosition(instanceMatrix);
+  mesh.localToWorld(instancePosition);
+  sitePulse.position.copy(instancePosition);
+  sitePulseStart=performance.now();
+  sitePulse.visible=true;
 }
 
 let downX=0,downY=0,dragged=false,pinned=false,lastHover=null;
@@ -526,7 +543,7 @@ tooltip.style.left=Math.max(14,Math.min(e.clientX+16,innerWidth-width-14))+'px';
 tooltip.style.top=Math.max(14,Math.min(e.clientY+16,innerHeight-height-14))+'px';
 }
 function showSite(hit,e,lock){
-outlineMarker(hit);
+showSitePulse(hit);
 const p=hit.p;
 tipName.textContent=label(p);
 tipDetail.textContent=display(p);
@@ -549,14 +566,14 @@ tipSource.hidden=!url;if(url)tipSource.href=url;else tipSource.removeAttribute('
 pinned=lock;tooltip.classList.toggle('pinned',lock);
 tooltip.classList.add('visible');placeTooltip(e);
 }
-function hide(){pinned=false;lastHover=null;halo.visible=false;tooltip.classList.remove('visible','pinned');}
+function hide(){pinned=false;lastHover=null;sitePulse.visible=false;tooltip.classList.remove('visible','pinned');}
 renderer.domElement.addEventListener('pointerdown',e=>{downX=e.clientX;downY=e.clientY;dragged=false;controls.autoRotate=false;});
 renderer.domElement.addEventListener('pointermove',e=>{
 if(Math.hypot(e.clientX-downX,e.clientY-downY)>5)dragged=true;
 if(pinned||e.buttons)return;
 const hit=pick(e);
 renderer.domElement.style.cursor=hit?'pointer':'grab';
-if(!hit){lastHover=null;halo.visible=false;tooltip.classList.remove('visible');return;}
+if(!hit){lastHover=null;sitePulse.visible=false;tooltip.classList.remove('visible');return;}
 if(hit.id!==lastHover){lastHover=hit.id;showSite(hit,e,false);}else placeTooltip(e);
 });
 renderer.domElement.addEventListener('pointerleave',()=>{if(!pinned)hide();});
@@ -582,6 +599,7 @@ timelineTicks.addEventListener('milestonechange',({detail:{year,location}})=>{
   if(!location)return;
   const {lat,lon}=location;
   const direction=xyz(lat,lon,1);
+  milestonePulseStart=performance.now();
   milestoneMarker.position.copy(direction).multiplyScalar(R+.045);
   milestoneMarker.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),direction);
   controls.autoRotate=false;
@@ -595,7 +613,18 @@ timelineTicks.addEventListener('milestonechange',({detail:{year,location}})=>{
 timelineTicks.querySelector('[aria-pressed="true"]')?.click();
 land();
 let frame=0;
-(function animate(){requestAnimationFrame(animate);controls.update();globe.updateMatrixWorld();if(landPositions.length&&frame++%18===0)updateFocus();if(halo.visible)halo.quaternion.copy(camera.quaternion);renderer.render(scene,camera);})();
+(function animate(time=performance.now()){
+  requestAnimationFrame(animate);
+  controls.update();
+  globe.updateMatrixWorld();
+  if(landPositions.length&&frame++%18===0)updateFocus();
+  if(milestoneMarker.visible)animatePulse(milestonePulse,time-milestonePulseStart,1450);
+  if(sitePulse.visible){
+    sitePulse.quaternion.copy(camera.quaternion);
+    animatePulse(sitePulse,time-sitePulseStart,1050);
+  }
+  renderer.render(scene,camera);
+})();
 </script>
 </body>
 </html>
