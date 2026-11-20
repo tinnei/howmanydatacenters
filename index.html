@@ -109,11 +109,10 @@ return '';
 }
 function updateFocus(){
 if(!landPositions.length)return;
-const direction=camera.position.clone().normalize();
+const direction=camera.position.clone().normalize().applyQuaternion(globe.quaternion.clone().invert());
 let best=-1,continent='';
 for(let i=0;i<landPositions.length;i++){
-const dot=landPositions[i].clone().applyMatrix4(globe.matrixWorld).normalize();
-const score=dot.dot(direction);
+const score=landPositions[i].dot(direction)/landPositions[i].length();
 if(score>best){best=score;continent=landContinentIds[i];}
 }
 const next=best>.72?continent:'';
