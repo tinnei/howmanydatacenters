@@ -158,7 +158,7 @@ a:hover{color:#242524;border-color:#242524}
         countSource.textContent = snapshot.publisher;
         countSource.href = snapshot.url;
       }
-      ticks.dispatchEvent(new CustomEvent('milestonechange', {detail: location ?? null}));
+      ticks.dispatchEvent(new CustomEvent('milestonechange', {detail: {year, location}}));
     });
     ticks.appendChild(button);
     return button;
@@ -215,6 +215,7 @@ const landDots=new THREE.Group();globe.add(landDots);
 const continentNames=['Africa','Antarctica','Asia','Europe','North America','Oceania','South America'];
 const continentOutlines=new Map();
 let countryPolygons=[],landMesh=null,landContinentIds=[],landPositions=[],siteGroups=[],activeContinent=null,siteTotal=null;
+let selectedYear='Now', liveSiteStatus='Loading locations…';
 function continentName(properties,lookup){
 const code=String(properties['ISO3166-1-Alpha-2']||'').toUpperCase();
 const name=lookup[code]||properties.CONTINENT||properties.continent||'';
@@ -230,13 +231,23 @@ return '';
 function updateCount(){
   const count=document.getElementById('count');
   const total=document.getElementById('countTotal');
+  const unit=document.querySelector('.unit');
+  const historical=selectedYear!=='Now';
+  status.textContent=historical?'':liveSiteStatus;
+  if(historical){
+    total.hidden=true;
+    count.textContent=historicalGroup.mesh.count.toLocaleString();
+    unit.textContent='documented historical sites';
+    return;
+  }
+  unit.textContent=activeContinent?'mapped sites in '+activeContinent:'mapped sites';
   total.hidden=siteTotal===null;
   if(siteTotal===null){
     count.textContent='—';
     return;
   }
   const visibleCount=activeContinent
-    ?siteGroups.reduce((sum,group)=>sum+group.items.filter(item=>item.continent===activeContinent).length,0)
+    ?siteGroups.reduce((sum,group)=>sum+(group.historical?0:group.items.filter(item=>item.continent===activeContinent).length),0)
     :siteTotal;
   count.textContent=visibleCount.toLocaleString();
   document.getElementById('totalCount').textContent=siteTotal.toLocaleString();
@@ -254,13 +265,13 @@ if(next===activeContinent)return;
 activeContinent=next;
 for(const [name,outline] of continentOutlines)outline.visible=name===next;
 updateCount();
-document.querySelector('.unit').textContent=next?'mapped sites in '+next:'mapped sites';
 if(landMesh){
 const normal=new THREE.Color(0xb9bdbb),highlight=new THREE.Color(0x929c99);
 for(let i=0;i<landContinentIds.length;i++)landMesh.setColorAt(i,next&&landContinentIds[i]===next?highlight:normal);
 landMesh.instanceColor.needsUpdate=true;
 }
 for(const group of siteGroups){
+if(group.historical)continue;
 const base=new THREE.Color(group.color),muted=new THREE.Color(0xdce1e3);
 group.items.forEach((item,i)=>group.mesh.setColorAt(i,!next||item.continent===next?base:muted));
 if(group.mesh.instanceColor)group.mesh.instanceColor.needsUpdate=true;
@@ -362,6 +373,38 @@ activeContinent=null;updateFocus();
 land();
 const pins=new THREE.Group();globe.add(pins);
 const dots=[],records=[];
+// Facilities with a documented opening or first operating year, in chronological order.
+// Coordinates mark the site or, where only a campus is identified, its approximate location.
+const historicalSites=[
+  [1973,'CERN Meyrin Computer Centre',46.235,6.050,'Meyrin','Switzerland','https://cds.cern.ch/record/1177861/files/CERN-2006-004.pdf?version=1'],
+  [1990,'Telehouse North',51.511,-0.002,'London','United Kingdom','https://www.telehouse.net/wp-content/uploads/2023/09/Telehouse-North-Fact-Sheet.pdf'],
+  [1999,'Equinix first IBX facility',39.016,-77.460,'Ashburn, Virginia','United States','https://investor.equinix.com/sec-filings/all-sec-filings/content/0001012870-99-004804/0001012870-99-004804.pdf'],
+  [2011,'Facebook Prineville Data Center',44.301,-120.872,'Prineville, Oregon','United States','https://about.fb.com/news/2011/04/facebook-launches-open-compute-project/'],
+  [2013,'Facebook Luleå Data Center',65.617,22.135,'Luleå','Sweden','https://about.fb.com/news/2013/06/data-center-update-lulea-goes-live/'],
+  [2013,'Google Singapore Data Center',1.367,103.694,'Jurong West','Singapore','https://www.datacenters.google/locations/singapore/']
+].map(([documented_by,name,lat,lon,city,country,source_url])=>({
+  p:{name,city,country,documented_by,source_url},c:[lon,lat],kind:'historical'
+}));
+const dotGeometry=new THREE.SphereGeometry(.014,8,6);
+function addSiteGroup(items,kind,color){
+  const mesh=new THREE.InstancedMesh(dotGeometry,new THREE.MeshBasicMaterial({color}),items.length);
+  const dummy=new THREE.Object3D();
+  items.forEach(({c},i)=>{
+    dummy.position.copy(xyz(+c[1],+c[0],R+.025));
+    dummy.updateMatrix();
+    mesh.setMatrixAt(i,dummy.matrix);
+  });
+  mesh.instanceMatrix.needsUpdate=true;
+  pins.add(mesh);
+  dots.push(mesh);
+  records.push(items.map(({p})=>({...p,_kind:kind})));
+  const group={mesh,items,color,historical:kind==='historical'};
+  siteGroups.push(group);
+  return group;
+}
+const historicalGroup=addSiteGroup(historicalSites,'historical',0x2474dc);
+historicalGroup.mesh.computeBoundingSphere();
+historicalGroup.mesh.visible=false;
 function coordinate(geom){if(!geom)return null;if(geom.type==='Point')return geom.coordinates;if(geom.type==='MultiPoint')return geom.coordinates?.[0];if(geom.type==='Polygon')return average(geom.coordinates?.[0]);if(geom.type==='MultiPolygon')return average(geom.coordinates?.[0]?.[0]);return null;}
 function average(coords){if(!Array.isArray(coords)||!coords.length)return null;let x=0,y=0,n=0;for(const c of coords){if(Array.isArray(c)&&Number.isFinite(+c[0])&&Number.isFinite(+c[1])){x+=+c[0];y+=+c[1];n++;}}return n?[x/n,y/n]:null;}
 function label(p){return p.name||p.site_name||p.facility_name||p.title||p.site_id||'Data center site';}
@@ -406,20 +449,16 @@ if(!c||!Number.isFinite(+c[0])||!Number.isFinite(+c[1])||Math.abs(+c[1])>90)cont
 const kind=classify(statusList(p));
 groups[kind].push({p,c,kind,continent:continentAt(+c[0],+c[1])});
 }
-const geo=new THREE.SphereGeometry(.014,8,6);
 const colors={existing:0x2474dc,upcoming:0xb6d8fa,unknown:0x9aa7b6};
 for(const kind of ['existing','upcoming','unknown']){
 const entries=groups[kind];if(!entries.length)continue;
-const mesh=new THREE.InstancedMesh(geo,new THREE.MeshBasicMaterial({color:colors[kind]}),entries.length);
-const dummy=new THREE.Object3D(),local=[];
-entries.forEach(({p,c},i)=>{dummy.position.copy(xyz(+c[1],+c[0],R+.025));dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);local.push({...p,_kind:kind});});
-mesh.instanceMatrix.needsUpdate=true;pins.add(mesh);dots.push(mesh);records.push(local);siteGroups.push({mesh,items:entries,color:colors[kind]});
+addSiteGroup(entries,kind,colors[kind]).mesh.visible=selectedYear==='Now';
 }
 siteTotal=Object.values(groups).reduce((n,items)=>n+items.length,0);
+liveSiteStatus='';
 activeContinent=null;
 if(landPositions.length)updateFocus();else updateCount();
-status.textContent='';
-}catch(error){console.error('Site data failed to load',error);status.textContent='Site data currently unavailable';siteTotal=null;updateCount();}
+}catch(error){console.error('Site data failed to load',error);liveSiteStatus='Site data currently unavailable';siteTotal=null;updateCount();}
 }
 loadSites();
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),tooltip=document.getElementById('tooltip');
@@ -455,13 +494,13 @@ if(!dots.length)return null;
 const rect=renderer.domElement.getBoundingClientRect();
 pointer.set(((e.clientX-rect.left)/rect.width)*2-1,-((e.clientY-rect.top)/rect.height)*2+1);
 ray.setFromCamera(pointer,camera);
-const hits=ray.intersectObjects([sphere,...dots],false);
+const hits=ray.intersectObjects([sphere,...dots.filter(mesh=>mesh.visible&&mesh.count>0)],false);
 const hit=hits[0]; // The globe occludes markers on its far side.
 if(!hit||hit.object===sphere)return null;
 const group=dots.indexOf(hit.object);
 if(group<0)return null;
 const p=records[group]?.[hit.instanceId];
-if(activeContinent&&siteGroups[group]?.items[hit.instanceId]?.continent!==activeContinent)return null;
+if(activeContinent&&!siteGroups[group].historical&&siteGroups[group].items[hit.instanceId]?.continent!==activeContinent)return null;
 return p?{p,id:group+':'+hit.instanceId}:null;
 }
 function placeTooltip(e){
@@ -474,8 +513,8 @@ outlineMarker(hit);
 const p=hit.p;
 tipName.textContent=label(p);
 tipDetail.textContent=display(p);
-tipStatus.textContent=p._kind==='existing'?'● Operating':p._kind==='upcoming'?'● Upcoming':'● Status unverified';
-tipStatus.style.color=p._kind==='existing'?'#2474dc':p._kind==='upcoming'?'#78aee9':'#8996a4';
+tipStatus.textContent=p._kind==='historical'?'● Documented by '+p.documented_by:p._kind==='existing'?'● Operating':p._kind==='upcoming'?'● Upcoming':'● Status unverified';
+tipStatus.style.color=p._kind==='historical'||p._kind==='existing'?'#2474dc':p._kind==='upcoming'?'#78aee9':'#8996a4';
 const raw=statusList(p).map(clean).filter(Boolean).map(v=>v.replaceAll('_',' '));
 const asOf=first(p,['newest_status_as_of','status_as_of','last_verified','observation_date']);
 const operator=first(p,['operator','operator_name','company','owner','owner_name']);
@@ -514,7 +553,13 @@ addEventListener('keydown',e=>{if(e.key==='Escape')hide();});
 function resize(){const w=innerWidth,h=innerHeight;camera.aspect=w/h;camera.fov=w<690?48:36;camera.updateProjectionMatrix();const headerTop=document.querySelector('header').getBoundingClientRect().top;const footerTop=document.querySelector(w<=680?'footer':'.footnote').getBoundingClientRect().top;const available=Math.max(240,footerTop-headerTop-24);const desired=Math.max(160,Math.min(h*.72,available)-60);const fov=camera.fov*Math.PI/180;const distance=R/Math.sin(Math.atan(desired/h*Math.tan(fov/2)*2));camera.position.setLength(Math.max(5.95,distance));controls.minDistance=2.8;renderer.setSize(w,h);}
 addEventListener('resize',resize);resize();
 const timelineTicks=document.getElementById('history-ticks');
-timelineTicks.addEventListener('milestonechange',({detail:location})=>{
+timelineTicks.addEventListener('milestonechange',({detail:{year,location}})=>{
+  selectedYear=year;
+  const historical=year!=='Now';
+  historicalGroup.mesh.count=historical?historicalSites.filter(({p})=>p.documented_by<=year).length:0;
+  for(const group of siteGroups)group.mesh.visible=group.historical===historical;
+  hide();
+  updateCount();
   milestoneMarker.visible=Boolean(location);
   if(!location)return;
   const {lat,lon}=location;
@@ -527,7 +572,6 @@ timelineTicks.addEventListener('milestonechange',({detail:location})=>{
   controls.enableDamping=true;
   camera.position.copy(direction.multiplyScalar(camera.position.length()));
   controls.update();
-  hide();
   updateFocus();
 });
 timelineTicks.querySelector('[aria-pressed="true"]')?.click();
