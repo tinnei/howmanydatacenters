@@ -221,7 +221,7 @@ tooltip.classList.add('visible');
 });
 renderer.domElement.addEventListener('pointerdown',()=>tooltip.classList.remove('visible'));
 addEventListener('keydown',e=>{if(e.key==='Escape')tooltip.classList.remove('visible');});
-function resize(){const w=innerWidth,h=innerHeight;camera.aspect=w/h;camera.fov=w<690?48:36;camera.updateProjectionMatrix();const headerTop=document.querySelector('header').getBoundingClientRect().top;const footerTop=document.querySelector('footer').getBoundingClientRect().top;const available=Math.max(240,footerTop-headerTop-24);const desired=Math.min(h*.72,available);const fov=camera.fov*Math.PI/180;const distance=R/Math.sin(Math.atan(desired/h*Math.tan(fov/2)*2));camera.position.setLength(Math.max(5.95,distance));controls.minDistance=2.8;renderer.setSize(w,h);}
+function resize(){const w=innerWidth,h=innerHeight;camera.aspect=w/h;camera.fov=w<690?48:36;camera.updateProjectionMatrix();const headerTop=document.querySelector('header').getBoundingClientRect().top;const footerTop=document.querySelector('footer').getBoundingClientRect().top;const available=Math.max(240,footerTop-headerTop-24);const desired=Math.max(180,Math.min(h*.72,available)-20);const fov=camera.fov*Math.PI/180;const distance=R/Math.sin(Math.atan(desired/h*Math.tan(fov/2)*2));camera.position.setLength(Math.max(5.95,distance));controls.minDistance=2.8;renderer.setSize(w,h);}
 addEventListener('resize',resize);resize();
 (function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera);})();
 </script>
