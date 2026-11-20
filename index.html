@@ -43,7 +43,9 @@ a:hover{color:#242524;border-color:#242524}
 #tooltip.visible{opacity:1;transform:translateY(0)}#tooltip.pinned{pointer-events:auto}#tooltip .close{display:none;position:absolute;top:7px;right:9px;background:none;border:0;color:#8b9290;font-size:18px;cursor:pointer}#tooltip.pinned .close{display:block}#tooltip .tag{font-size:10px;color:#6d7775;margin-bottom:8px}#tooltip .more{font-size:10px;color:#8c9491;line-height:1.7;margin-top:9px}#tooltip .more:empty{display:none}#tooltip a{font-size:10px;display:inline-block;margin-top:8px}
 #tooltip strong{display:block;font-size:12px;font-weight:550;line-height:1.5}
 #tooltip span{display:block;color:#9b9d9b;font-size:10px;line-height:1.6;margin-top:4px}
-#status{position:fixed;bottom:50%;left:50%;transform:translate(-50%,190px);font-size:11px;color:#a4a5a4;letter-spacing:.02em;z-index:2;pointer-events:none;white-space:nowrap}
+#status{display:flex;align-items:center;gap:6px;position:fixed;bottom:50%;left:50%;transform:translate(-50%,190px);font-size:11px;color:#a4a5a4;letter-spacing:.02em;z-index:2;pointer-events:none;white-space:nowrap}
+.globe-loader{display:block;flex:none}.globe-loader[hidden]{display:none}
+@media(prefers-reduced-motion:reduce){.globe-loader{display:none}}
 @media(max-width:680px){header{top:24px}h1{font-size:34px;line-height:.94;letter-spacing:-.045em}.sub{max-width:190px;font-size:11px}.metric{top:24px;bottom:auto;right:24px}.utc-clock{font-size:10px;margin-bottom:9px}.count{font-size:35px}footer{bottom:20px;flex-direction:column-reverse;gap:7px}.footnote{align-self:start;max-width:220px;font-size:9px}.control{display:none}#status{transform:translate(-50%,170px)}}
 @media(max-width:440px){.metric{max-width:calc(100vw - 204px)}.count{font-size:clamp(24px,7.4vw,32px)}}
 </style>
@@ -60,7 +62,7 @@ a:hover{color:#242524;border-color:#242524}
 <div class="count"><span id="count">—</span><span id="countTotal" class="count-total" hidden> / <span id="totalCount"></span></span></div>
 <div class="unit">mapped sites</div>
 </div>
-<div id="status">Loading locations…</div>
+<div id="status" role="status" aria-atomic="true"><img id="globe-loader" class="globe-loader" width="16" height="16" alt="" src="data:image/gif;base64,R0lGODlhGAAYAPIAAP///+ru7Nfe27rFwaCuqYSWj2l/eFNqZCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJCQAAACwAAAAAGAAYAAAD/wgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAHB4AACAAAAACAAAgAAAcHgAAIAAAAAIAACGZgAACAAQgQEAAAgAAIZmAAAIABCBAQAACAAAhgYAAAgAAIEBAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAFWAAAAACAAAgBABAAgAVYAAAAAIAACAEAEACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAhAQAAAgAAIICAAAIAACERAAACAAgggIAAAgAAFKERAAACAAgggIAAAgAAIAAADA4AACAAAAACAAAgAAAMDgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAJACH5BAkJAAAALAAAAAAYABgAAAP/CAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAYGgAAIAAAAAIAACAAABgaAAAgAAAAAgAAIVVAAAIAHCHBwAACAAAhVUAAAgAcIcHAAAIAACFBQAACAAAhwcAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgARIAAAAAIAACAEAEACABEgAAAAAgAAIAQAQAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACDAwAACAAAgQEAAAgAAIMzAAAIABCBAQAACAAAUoMzAAAIABCBAQAACAAAgAAAICgAAIAAAAAIAACAAAAgKAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAkAIfkECQkAAAAsAAAAABgAGAAAA/8IAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAABQWAAAgAAAAAgAAIAAAFBYAACAAAAACAAAhEQAAAgAYIYGAAAIAACERAAACABghgYAAAgAAIQEAAAIAACGBgAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAzgAAAAAgAAIBwBwAIADOAAAAACAAAgHAHAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIICAAAIAACBAQAACAAAgiIAAAgAEIEBAAAIAABSgiIAAAgAEIEBAAAIAACAAAAQGAAAgAAAAAgAAIAAABAYAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACQAh+QQJCQAAACwAAAAAGAAYAAAD/wgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAEBIAACAAAAACAAAgAAAQEgAAIAAAAAIAACDMwAACABQhQUAAAgAAIMzAAAIAFCFBQAACAAAgwMAAAgAAIUFAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIACKAAAAACAAAgGAGAAgAIoAAAAAIAACAYAYACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgQEAAAgAAIcHAAAIAACBEQAACABwhwcAAAgAAFKBEQAACABwhwcAAAgAAIAAABAYAACAAAAACAAAgAAAEBgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAJACH5BAkJAAAALAAAAAAYABgAAAP/CAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAMDgAAIAAAAAIAACAAAAwOAAAgAAAAAgAAIIiAAAIAECEBAAACAAAgiIAAAgAQIQEAAAIAACCAgAACAAAhAQAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAEYAAAAAIAACAUAUACAARgAAAAAgAAIBQBQAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACBAQAACAAAhgYAAAgAAIERAAAIAGCGBgAACAAAUoERAAAIAGCGBgAACAAAgAAAcHgAAIAAAAAIAACAAABweAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAkAIfkECQkAAAAsAAAAABgAGAAAA/8IAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAgKAAAgAAAAAgAAIAAACAoAACAAAAACAAAgREAAAgAMIMDAAAIAACBEQAACAAwgwMAAAgAAIEBAAAIAACDAwAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAARgAAAAAgAAIBABAAIABGAAAAACAAAgEAEAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIcHAAAIAACFBQAACAAAh3cAAAgAUIUFAAAIAABSh3cAAAgAUIUFAAAIAACAAABgaAAAgAAAAAgAAIAAAGBoAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACQAh+QQJCQAAACwAAAAAGAAYAAAD/wgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAABAYAACAAAAACAAAgAAAEBgAAIAAAAAIAACBEQAACAAgggIAAAgAAIERAAAIACCCAgAACAAAgQEAAAgAAIICAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAHeAAAAACAAAgDADAAgAd4AAAAAIAACAMAMACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAhgYAAAgAAIQEAAAIAACGZgAACABAhAQAAAgAAFKGZgAACABAhAQAAAgAAIAAAFBYAACAAAAACAAAgAAAUFgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAJACH5BAkJAAAALAAAAAAYABgAAAP/CAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAEBgAAIAAAAAIAACAAAAQGAAAgAAAAAgAAId3AAAIABCBAQAACAAAh3cAAAgAEIEBAAAIAACHBwAACAAAgQEAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAZoAAAAAIAACAIAIACABmgAAAAAgAAIAgAgAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACFBQAACAAAgwMAAAgAAIVVAAAIADCDAwAACAAAUoVVAAAIADCDAwAACAAAgAAAQEgAAIAAAAAIAACAAABASAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAkAOw=="><span id="globe-status-text">Loading globe…</span></div>
 <div id="tooltip" role="status"><button class="close" id="tipclose" aria-label="Close site details">×</button><div class="tag" id="tipstatus"></div><strong id="tipname"></strong><span id="tipdetail"></span><div class="more" id="tipmore"></div><a id="tipsource" target="_blank" rel="noopener noreferrer" hidden>View source</a></div>
 <footer>
 <div class="footnote">Data: <a href="https://github.com/kiankyars/datacenter-atlas" target="_blank" rel="noopener noreferrer">Data Center Atlas</a> · CC BY 4.0 · <span style="color:#2474dc">●</span> operating · <span style="color:#b6d8fa">●</span> upcoming · <span style="color:#9aa7b6">●</span> unverified</div>
@@ -167,10 +169,20 @@ a:hover{color:#242524;border-color:#242524}
 }
 </script>
 <script type="module">
-import * as THREE from 'three';
-import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-
-const root=document.getElementById('globe'), status=document.getElementById('status');
+const root=document.getElementById('globe');
+const loader=document.getElementById('globe-loader');
+const statusText=document.getElementById('globe-status-text');
+function setGlobeStatus(message,loading=false){
+  loader.hidden=!loading;
+  if(statusText.textContent!==message)statusText.textContent=message;
+}
+const [THREE,{OrbitControls}]=await Promise.all([
+  import('three'),
+  import('three/addons/controls/OrbitControls.js')
+]).catch(error=>{
+  setGlobeStatus('The globe could not load.');
+  throw error;
+});
 const clock=document.getElementById('utcClock');
 function tickClock(){clock.textContent=new Date().toISOString().slice(11,19)+' UTC';}
 tickClock();setInterval(tickClock,1000);
@@ -182,7 +194,7 @@ let renderer;
 try{
   renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'default'});
 }catch(error){
-  status.textContent='The 3D globe requires WebGL.';
+  setGlobeStatus('The 3D globe requires WebGL.');
   throw error;
 }
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
@@ -220,7 +232,13 @@ globe.add(milestoneMarker);
 const landDots=new THREE.Group();globe.add(landDots);
 const continentOutlines=new Map();
 let continentPolygons=[],countryContinents=new Map(),landMesh=null,landContinentIds=[],landPositions=[],siteGroups=[],activeContinent=null,siteTotal=null;
-let selectedYear='Now', liveSiteStatus='Loading locations…', sitesLoading=false;
+let selectedYear='Now', liveSiteStatus='', sitesLoading=false;
+let landLoading=true, landFailed=false;
+function updateGlobeStatus(){
+  if(landLoading)setGlobeStatus('Loading globe…',true);
+  else if(selectedYear==='Now'&&liveSiteStatus)setGlobeStatus(liveSiteStatus,sitesLoading);
+  else setGlobeStatus(landFailed?'Globe map unavailable':'');
+}
 function continentAt(lon,lat,country){
 for(const item of continentPolygons){
 if(lat<item.minLat||lat>item.maxLat||lon<item.minLon||lon>item.maxLon)continue;
@@ -234,7 +252,7 @@ function updateCount(){
   const total=document.getElementById('countTotal');
   const unit=document.querySelector('.unit');
   const historical=selectedYear!=='Now';
-  status.textContent=historical?'':liveSiteStatus;
+  updateGlobeStatus();
   if(historical){
     total.hidden=true;
     count.textContent=historicalGroup.mesh.count.toLocaleString();
@@ -358,9 +376,14 @@ mesh.instanceMatrix.needsUpdate=true;landDots.add(mesh);landMesh=mesh;landPositi
 // Data may have arrived before the geographic lookup was ready.
 for(const group of siteGroups){group.items.forEach(item=>item.continent=continentAt(+item.c[0],+item.c[1],item.p.country||item.p.country_name));}
 activeContinent=null;updateFocus();
-}catch(err){console.warn('Land dots unavailable',err);}
+}catch(err){
+  console.warn('Land dots unavailable',err);
+  landFailed=true;
+}finally{
+  landLoading=false;
+  updateGlobeStatus();
 }
-land();
+}
 const pins=new THREE.Group();globe.add(pins);
 const dots=[],records=[];
 // Facilities with a documented opening or first operating year, in chronological order.
@@ -453,7 +476,7 @@ liveSiteStatus='';
 activeContinent=null;
 if(landPositions.length)updateFocus();else updateCount();
 }catch(error){console.error('Site data failed to load',error);liveSiteStatus='Site data currently unavailable';siteTotal=null;updateCount();}
-finally{sitesLoading=false;}
+finally{sitesLoading=false;updateGlobeStatus();}
 }
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),tooltip=document.getElementById('tooltip');
 const tipName=document.getElementById('tipname'),tipDetail=document.getElementById('tipdetail');
@@ -570,6 +593,7 @@ timelineTicks.addEventListener('milestonechange',({detail:{year,location}})=>{
   updateFocus();
 });
 timelineTicks.querySelector('[aria-pressed="true"]')?.click();
+land();
 let frame=0;
 (function animate(){requestAnimationFrame(animate);controls.update();globe.updateMatrixWorld();if(landPositions.length&&frame++%18===0)updateFocus();if(halo.visible)halo.quaternion.copy(camera.quaternion);renderer.render(scene,camera);})();
 </script>
