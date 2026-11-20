@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="theme-color" content="#ffffff"/>
+<meta name="description" content="How many data centers? A quiet, interactive globe of publicly mapped data center sites."/>
+<title>How Many Data Centers?</title>
+<style>
+:root{color-scheme:light;--ink:#262726;--muted:#999b99;--line:#e6e7e5}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#fff;color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
+#globe{position:fixed;inset:0;touch-action:none;cursor:grab}
+#globe:active{cursor:grabbing}
+header{position:absolute;z-index:2;top:clamp(27px,5vw,70px);left:clamp(24px,5.5vw,94px);pointer-events:none}
+.eyebrow{font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:#a4a5a4;font-weight:600;margin-bottom:17px}
+h1{font-size:clamp(30px,4.8vw,68px);font-weight:440;letter-spacing:-.065em;line-height:1.05;margin:0}
+.sub{font-size:12px;line-height:1.8;color:#999b99;margin-top:17px;max-width:300px}
+.metric{position:absolute;z-index:2;top:clamp(29px,5vw,70px);right:clamp(24px,5.5vw,94px);text-align:right;pointer-events:none}
+.count{font-size:clamp(30px,4.3vw,60px);letter-spacing:-.065em;font-weight:430;font-variant-numeric:tabular-nums}
+.unit{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:#a1a3a1;margin-top:5px}
+footer{position:absolute;left:clamp(24px,5.5vw,94px);right:clamp(24px,5.5vw,94px);bottom:clamp(22px,4vw,45px);display:flex;align-items:end;justify-content:space-between;z-index:2;gap:30px}
+.footnote{font-size:10px;line-height:1.9;color:#a4a5a4;max-width:380px}
+a{color:#747774;text-decoration:none;border-bottom:1px solid #d5d7d5}
+a:hover{color:#242524;border-color:#242524}
+.control{font-size:10px;color:#a4a5a4;letter-spacing:.03em;white-space:nowrap}
+#tooltip{position:fixed;z-index:4;padding:13px 16px;background:#fff;border:1px solid #e8e8e8;box-shadow:0 6px 30px #2222220b;border-radius:6px;max-width:240px;pointer-events:none;opacity:0;transform:translateY(5px);transition:opacity .15s,transform .15s}
+#tooltip.visible{opacity:1;transform:translateY(0)}
+#tooltip strong{display:block;font-size:12px;font-weight:550;line-height:1.5}
+#tooltip span{display:block;color:#9b9d9b;font-size:10px;line-height:1.6;margin-top:4px}
+#status{position:fixed;bottom:50%;left:50%;transform:translate(-50%,190px);font-size:11px;color:#a4a5a4;letter-spacing:.02em;z-index:2;pointer-events:none;white-space:nowrap}
+@media(max-width:680px){header{top:24px}h1{font-size:32px}.sub{max-width:190px;font-size:11px}.metric{top:auto;bottom:94px;right:24px}.count{font-size:35px}footer{bottom:20px}.footnote{max-width:220px;font-size:9px}.control{display:none}#status{transform:translate(-50%,170px)}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
+</head>
+<body>
+<div id="globe" aria-label="Interactive 3D globe showing public data center site locations"></div>
+<header>
+<div class="eyebrow">An infrastructure atlas</div>
+<h1>How many<br/>data centers?</h1>
+<div class="sub">A small window into the physical world behind the internet.</div>
+</header>
+<div class="metric" aria-live="polite">
+<div id="count" class="count">—</div>
+<div class="unit">Mapped sites</div>
+</div>
+<div id="status">Loading locations…</div>
+<div id="tooltip" role="status"><strong id="tipname"></strong><span id="tipdetail"></span></div>
+<footer>
+<div class="footnote">Publicly documented locations, not a complete census.<br/>Data: <a href="https://github.com/kiankyars/datacenter-atlas" target="_blank" rel="noopener noreferrer">Data Center Atlas</a> · CC BY 4.0 · Location precision varies.</div>
+<div class="control">DRAG TO ROTATE &nbsp; · &nbsp; SCROLL TO ZOOM</div>
+</footer>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+
+const root=document.getElementById('globe'), status=document.getElementById('status');
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0xffffff);
+const camera=new THREE.PerspectiveCamera(36,innerWidth/innerHeight,.1,100);
+camera.position.set(0,0,5.9);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+root.appendChild(renderer.domElement);
+scene.add(new THREE.AmbientLight(0xffffff,2));
+const globe=new THREE.Group();
+scene.add(globe);
+const R=1.72;
+const sphere=new THREE.Mesh(new THREE.SphereGeometry(R,96,64),new THREE.MeshPhongMaterial({color:0xf8f8f7,shininess:5,specular:0xffffff}));
+globe.add(sphere);
+const light=new THREE.DirectionalLight(0xffffff,1.5);light.position.set(-3,5,8);scene.add(light);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enablePan=false;controls.enableDamping=true;controls.dampingFactor=.055;
+controls.minDistance=2.8;controls.maxDistance=9;controls.rotateSpeed=.52;controls.enableZoom=true;
+controls.autoRotate=true;controls.autoRotateSpeed=.22;
+controls.target.set(0,0,0);
+function xyz(lat,lon,r=R){const a=(90-lat)*Math.PI/180,b=(lon+180)*Math.PI/180;return new THREE.Vector3(-r*Math.sin(a)*Math.cos(b),r*Math.cos(a),r*Math.sin(a)*Math.sin(b));}
+const borders=new THREE.Group();globe.add(borders);
+const borderMaterial=new THREE.LineBasicMaterial({color:0xd6d9d7,transparent:true,opacity:.75,depthWrite:false});
+function drawRing(ring){if(!Array.isArray(ring)||ring.length<2)return;let segment=[];const finish=()=>{if(segment.length>1){const geo=new THREE.BufferGeometry().setFromPoints(segment);borders.add(new THREE.Line(geo,borderMaterial));}segment=[];};
+for(let i=0;i<ring.length;i++){const p=ring[i],prev=ring[i-1];if(!Array.isArray(p)||p.length<2)continue;if(prev&&Math.abs(p[0]-prev[0])>180)finish();segment.push(xyz(p[1],p[0],R+.007));}finish();}
+async function land(){try{const r=await fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson');if(!r.ok)throw Error('No boundaries');const data=await r.json();for(const f of data.features||[]){const g=f.geometry;if(!g)continue;if(g.type==='Polygon')g.coordinates.forEach(drawRing);else if(g.type==='MultiPolygon')g.coordinates.forEach(poly=>poly.forEach(drawRing));}}catch(err){console.warn('Country outlines unavailable',err);}}
+land();
+const pins=new THREE.Group();globe.add(pins);
+const dots=[],records=[];
+function coordinate(geom){if(!geom)return null;if(geom.type==='Point')return geom.coordinates;if(geom.type==='MultiPoint')return geom.coordinates?.[0];if(geom.type==='Polygon')return average(geom.coordinates?.[0]);if(geom.type==='MultiPolygon')return average(geom.coordinates?.[0]?.[0]);return null;}
+function average(coords){if(!Array.isArray(coords)||!coords.length)return null;let x=0,y=0,n=0;for(const c of coords){if(Array.isArray(c)&&Number.isFinite(+c[0])&&Number.isFinite(+c[1])){x+=+c[0];y+=+c[1];n++;}}return n?[x/n,y/n]:null;}
+function label(p){return p.name||p.site_name||p.facility_name||p.title||p.site_id||'Data center site';}
+function display(p){return [p.city||p.locality||p.location_name,p.country||p.country_name].filter(Boolean).join(', ')||'Publicly mapped location';}
+async function loadSites(){
+try{
+const url='https://kiankyars.github.io/datacenter-atlas/downloads/latest/sites.geojson';
+const response=await fetch(url,{cache:'no-store'});
+if(!response.ok)throw Error('Dataset HTTP '+response.status);
+const data=await response.json();
+const features=data.features||[];
+const geometry=new THREE.SphereGeometry(.012,7,5);
+const material=new THREE.MeshBasicMaterial({color:0x424845});
+const valid=[];
+for(const f of features){const p=f.properties||{},c=coordinate(f.geometry);if(!c||!Number.isFinite(+c[0])||!Number.isFinite(+c[1])||Math.abs(+c[1])>90)continue;valid.push({p,c});}
+const mesh=new THREE.InstancedMesh(geometry,material,valid.length);
+const dummy=new THREE.Object3D();
+valid.forEach(({p,c},i)=>{dummy.position.copy(xyz(+c[1],+c[0],R+.018));dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);records.push(p);});
+mesh.instanceMatrix.needsUpdate=true;
+pins.add(mesh);dots.push(mesh);
+document.getElementById('count').textContent=valid.length.toLocaleString();
+status.textContent='';
+}catch(error){console.error('Site data failed to load',error);status.textContent='Site data currently unavailable';document.getElementById('count').textContent='—';}
+}
+loadSites();
+const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),tooltip=document.getElementById('tooltip');
+let startX=0,startY=0,moved=false;
+renderer.domElement.addEventListener('pointerdown',e=>{startX=e.clientX;startY=e.clientY;moved=false;controls.autoRotate=false;});
+renderer.domElement.addEventListener('pointermove',e=>{if(Math.hypot(e.clientX-startX,e.clientY-startY)>5)moved=true;});
+renderer.domElement.addEventListener('click',e=>{
+if(moved||!dots.length)return;
+const rect=renderer.domElement.getBoundingClientRect();pointer.set(((e.clientX-rect.left)/rect.width)*2-1,-((e.clientY-rect.top)/rect.height)*2+1);
+ray.setFromCamera(pointer,camera);
+const hit=ray.intersectObjects([sphere,...dots],false)[0];
+if(!hit||hit.object===sphere){tooltip.classList.remove('visible');return;}
+const p=records[hit.instanceId]||{};
+document.getElementById('tipname').textContent=String(label(p));
+document.getElementById('tipdetail').textContent=String(display(p));
+tooltip.style.left=Math.min(e.clientX+14,innerWidth-245)+'px';
+tooltip.style.top=Math.max(12,Math.min(e.clientY+12,innerHeight-100))+'px';
+tooltip.classList.add('visible');
+});
+renderer.domElement.addEventListener('pointerdown',()=>tooltip.classList.remove('visible'));
+function resize(){const w=innerWidth,h=innerHeight;camera.aspect=w/h;camera.fov=w<690?48:36;camera.updateProjectionMatrix();renderer.setSize(w,h);}
+addEventListener('resize',resize);resize();
+(function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera);})();
+</script>
+</body>
+</html>
