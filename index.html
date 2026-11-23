@@ -28,6 +28,8 @@ a:hover{color:#242524;border-color:#242524}
 .history{width:min(360px,100%);min-width:0}
 .history-ticks{position:relative;display:grid;grid-template-columns:repeat(var(--ticks),minmax(0,1fr))}
 .history-ticks + .history-ticks{margin-top:3px}
+.history-atlas{display:block;margin:6px 0 0 auto;padding:4px 0;border:0;border-bottom:1px solid #d5d7d5;background:none;color:#686e6b;font:inherit;font-size:10px;cursor:pointer}
+.history-atlas[aria-pressed="true"]{color:var(--ink);border-bottom-color:currentColor;font-weight:650}
 .history-ticks::before{content:"";position:absolute;top:9px;left:calc(50% / var(--ticks));right:calc(50% / var(--ticks));border-top:1px solid #d5d9d7;pointer-events:none}
 .history-ticks button{position:relative;border:0;background:none;padding:6px 0 5px;color:#6d7471;cursor:pointer;font:inherit;font-size:10px;font-variant-numeric:tabular-nums}
 .history-ticks button::before{content:"";display:block;width:7px;height:7px;border-radius:50%;margin:0 auto 5px;background:#fff;border:1px solid #9da7a2}
@@ -86,6 +88,7 @@ a:hover{color:#242524;border-color:#242524}
   <div id="history-ticks">
     <div class="history-ticks" id="history-milestones" role="group" aria-label="Historical milestones"></div>
     <div class="history-ticks" id="history-recent" role="group" aria-label="Recent snapshots"></div>
+    <button type="button" class="history-atlas" id="history-atlas">Browse current Atlas</button>
   </div>
 </section>
 </footer>
@@ -105,7 +108,8 @@ a:hover{color:#242524;border-color:#242524}
     [2023, 'December 2023 snapshot'],
     [2024, 'December 2024 snapshot'],
     [2025, 'December 2025 snapshot'],
-    ['Now', '2026 · The IEA reports rising electricity demand from data centers as AI use expands.', 'International Energy Agency', 'https://www.iea.org/news/data-centre-electricity-use-surged-in-2025-even-with-tightening-bottlenecks-driving-a-scramble-for-solutions']
+    [2026, '2026 · The IEA reports rising electricity demand from data centers as AI use expands.', 'International Energy Agency', 'https://www.iea.org/news/data-centre-electricity-use-surged-in-2025-even-with-tightening-bottlenecks-driving-a-scramble-for-solutions'],
+    ['Now', 'Current Atlas map', 'Data Center Atlas', 'https://github.com/kiankyars/datacenter-atlas']
   ];
   const locations = new Map([
     [1946, {name:'Philadelphia, Pennsylvania', lat:39.952, lon:-75.191}],
@@ -154,15 +158,9 @@ a:hover{color:#242524;border-color:#242524}
       scope: 'hyperscale data centers worldwide · year-end 2025',
       publisher: 'Synergy Research Group',
       url: 'https://www.srgresearch.com/articles/hyperscale-operators-to-account-for-67-of-all-data-center-capacity-by-2031'
-    }],
-    ['Now', {
-      value: '13,373',
-      scope: 'data center listings in 185 countries · Nov 2026 snapshot',
-      publisher: 'Data Center Map',
-      url: 'https://www.datacentermap.com/datacenters/'
     }]
   ]);
-  const archiveMonths = new Map([[2021,'2021/09'],[2022,'2022/12'],[2023,'2023/12'],[2024,'2024/12'],[2025,'2025/12'],['Now','2026/11']]);
+  const archiveMonths = new Map([[2021,'2021/09'],[2022,'2022/12'],[2023,'2023/12'],[2024,'2024/12'],[2025,'2025/12'],[2026,'2026/11']]);
   const ticks = document.getElementById('history-ticks');
   const milestoneTicks = document.getElementById('history-milestones');
   const recentTicks = document.getElementById('history-recent');
@@ -175,25 +173,26 @@ a:hover{color:#242524;border-color:#242524}
   const countValue = document.getElementById('history-count-value');
   const countScope = document.getElementById('history-count-scope');
   const countSource = document.getElementById('history-count-source');
-  milestoneTicks.style.setProperty('--ticks', milestones.length-archiveMonths.size);
+  milestoneTicks.style.setProperty('--ticks', milestones.length-archiveMonths.size-1);
   recentTicks.style.setProperty('--ticks', archiveMonths.size);
   let selectedTick;
   const buttons = milestones.map(([year, description, publisher, url]) => {
-    const button = document.createElement('button');
+    const atlas = year === 'Now';
+    const button = atlas ? document.getElementById('history-atlas') : document.createElement('button');
     button.type = 'button';
-    button.textContent = year;
+    if(!atlas)button.textContent = year;
     const archiveMonth = archiveMonths.get(year);
-    button.setAttribute('aria-label', year === 'Now' || year === 1946 || archiveMonth ? String(year) : 'Decade ending in ' + year);
+    if(!atlas)button.setAttribute('aria-label', year === 1946 || archiveMonth ? String(year) : 'Decade ending in ' + year);
     button.setAttribute('aria-pressed', 'false');
     button.addEventListener('click', () => {
       selectedTick?.setAttribute('aria-pressed', 'false');
       button.setAttribute('aria-pressed', 'true');
       selectedTick = button;
       event.textContent = description;
-      coverage.hidden = !archiveMonth;
+      coverage.hidden = !archiveMonth && !atlas;
       coverage.textContent = year === 'Now'
         ? 'Map layer: Data Center Atlas records, including upcoming sites.'
-        : 'Map layer: selected historical examples.';
+        : 'Map layer: selected openings documented through this snapshot.';
       source.hidden = !url;
       source.textContent = publisher ?? '';
       if(url)source.href = url;
@@ -216,7 +215,7 @@ a:hover{color:#242524;border-color:#242524}
       }
       ticks.dispatchEvent(new CustomEvent('milestonechange', {detail: {year, location}}));
     });
-    (archiveMonth ? recentTicks : milestoneTicks).appendChild(button);
+    if(!atlas)(archiveMonth ? recentTicks : milestoneTicks).appendChild(button);
     return button;
   });
   buttons[0].click();
@@ -489,7 +488,10 @@ const historicalSites=[
   [2024,"Meta Gallatin Data Center",36.39,-86.45,"Gallatin, Tennessee","United States","https://datacenters.atmeta.com/2024/11/gallatin-we-are-online/",false,true],
   [2025,"Equinix Jakarta IBX",-6.21,106.85,"Jakarta","Indonesia","https://newsroom.equinix.com/2025-05-15-Equinix-Unveils-Its-First-AI-Ready-Data-Center-with-Dense-Ecosystem-in-Jakarta",true,true],
   [2025,"Meta Kansas City Data Center",39.1,-94.58,"Kansas City, Missouri","United States","https://about.fb.com/news/2025/08/metas-kansas-city-data-center/",false,true],
-  [2025,"Equinix Chennai CN1",13.08,80.27,"Chennai","India","https://newsroom.equinix.com/2025-09-19-Equinix-Opens-First-AI-Ready-Data-Center-in-Chennai",false,true]
+  [2025,"Equinix Chennai CN1",13.08,80.27,"Chennai","India","https://newsroom.equinix.com/2025-09-19-Equinix-Opens-First-AI-Ready-Data-Center-in-Chennai",false,true],
+  [2026,"Microsoft Fairwater Mount Pleasant",42.70,-87.90,"Mount Pleasant, Wisconsin","United States","https://news.microsoft.com/source/2026/06/23/microsoft-completes-construction-on-first-datacenter-facility-in-mount-pleasant-wisconsin/",false,true],
+  [2026,"Meta Temple Data Center",31.10,-97.34,"Temple, Texas","United States","https://datacenters.atmeta.com/2026/07/temple-we-are-online/",false,true],
+  [2026,"Equinix Singapore SG6",1.34,103.70,"Singapore","Singapore","https://newsroom.equinix.com/2026-11-06-Equinix-Opens-SG6-to-Support-Singapores-Digital-Future-and-Strengthen-Its-Role-as-a-Global-Innovation-Hub",true,true]
 ].map(([documented_by,name,lat,lon,city,country,source_url,colocation=false,approximate=false])=>({
   p:{name,city,country,documented_by,source_url,colocation,approximate},c:[lon,lat],kind:'historical'
 }));
