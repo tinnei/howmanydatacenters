@@ -27,7 +27,6 @@ a:hover{color:#242524;border-color:#242524}
 .control{font-size:10px;color:#a4a5a4;letter-spacing:.03em;white-space:nowrap}
 .history{width:min(360px,100%);min-width:0}
 .history-ticks{position:relative;display:grid;grid-template-columns:repeat(var(--ticks),minmax(0,1fr))}
-.history-ticks + .history-ticks{margin-top:3px}
 .history-actions{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:6px}
 .history-atlas{display:block;padding:4px 0;border:0;border-bottom:1px solid #d5d7d5;background:none;color:#686e6b;font:inherit;font-size:10px;cursor:pointer}
 .list-toggle{display:grid;place-items:center;width:28px;height:28px;border:1px solid #d5d7d5;border-radius:6px;background:#fff;color:#454b48;cursor:pointer}
@@ -55,8 +54,7 @@ a:hover{color:#242524;border-color:#242524}
 .history-ticks button:hover::before{border-color:#262726}
 .history-ticks button:focus-visible{outline:1px solid #617572;outline-offset:-1px;border-radius:4px}
 .history-detail{margin-bottom:8px;color:#454b48;font-size:11px;line-height:1.5}
-.history-event,.history-location,.history-count{margin:0 0 4px}
-.history-location{color:#617572;font-weight:600}
+.history-event,.history-count{margin:0 0 4px}
 .history-count-label,.history-coverage{color:#686e6b}
 .history-coverage{margin:0 0 4px}
 .history-count strong{color:var(--ink);font-size:14px;font-variant-numeric:tabular-nums}
@@ -92,8 +90,7 @@ a:hover{color:#242524;border-color:#242524}
   <div class="history-detail">
     <div aria-live="polite" aria-atomic="true">
       <p id="history-event" class="history-event"></p>
-      <p id="history-location" class="history-location" hidden></p>
-      <p id="history-coverage" class="history-coverage" hidden></p>
+      <p id="history-coverage" class="history-coverage"></p>
       <p id="history-count" class="history-count" hidden><span class="history-count-label">Reported by source · </span><strong id="history-count-value"></strong> <span id="history-count-scope"></span></p>
     </div>
     <div class="history-sources">
@@ -103,7 +100,6 @@ a:hover{color:#242524;border-color:#242524}
     </div>
   </div>
   <div id="history-ticks">
-    <div class="history-ticks" id="history-milestones" role="group" aria-label="Historical milestones"></div>
     <div class="history-ticks" id="history-recent" role="group" aria-label="Recent snapshots"></div>
     <div class="history-actions">
       <button type="button" class="history-atlas" id="history-atlas">Browse current Atlas</button>
@@ -122,15 +118,7 @@ a:hover{color:#242524;border-color:#242524}
 </dialog>
 <script>
 {
-  const milestones = [
-    [1946, '1946 · ENIAC is unveiled at Penn. Its room-sized installation is an early precursor to the data center.', 'University of Pennsylvania', 'https://penntoday.upenn.edu/news/penns-eniac-worlds-first-electronic-computer-turns-80'],
-    [1956, '1951 · The U.S. Census Bureau installs UNIVAC I to process census data.', 'U.S. Census Bureau', 'https://www.census.gov/about/history/bureau-history/census-innovations/faq.html'],
-    [1966, '1964 · IBM introduces System/360, a family of compatible mainframes.', 'IBM', 'https://www.ibm.com/history/system-360'],
-    [1976, '1969 · The first ARPANET message travels from UCLA to Stanford Research Institute.', 'UCLA', 'https://www.lk.cs.ucla.edu/internet_first_words.html'],
-    [1986, '1986 · NSFNET begins connecting researchers to U.S. supercomputing centers.', 'National Science Foundation', 'https://www.nsf.gov/about/history/nsf0050/pdf/internet.pdf'],
-    [1996, '1990 · The first web server runs at CERN, making websites possible.', 'CERN', 'https://home.cern/science/computing/the-birth-of-the-web/short-history-web/'],
-    [2006, '2006 · Amazon EC2 launches, letting customers rent computing capacity by the hour.', 'AWS', 'https://aws.amazon.com/blogs/aws/ec2-instance-history/'],
-    [2016, '2011 · Facebook shares designs from its Oregon data center through the Open Compute Project.', 'Meta', 'https://about.fb.com/news/2011/04/facebook-launches-open-compute-project/'],
+  const snapshots = [
     [2021, 'September 2021 snapshot'],
     [2022, 'December 2022 snapshot'],
     [2023, 'December 2023 snapshot'],
@@ -139,30 +127,8 @@ a:hover{color:#242524;border-color:#242524}
     [2026, '2026 · The IEA reports rising electricity demand from data centers as AI use expands.', 'International Energy Agency', 'https://www.iea.org/news/data-centre-electricity-use-surged-in-2025-even-with-tightening-bottlenecks-driving-a-scramble-for-solutions'],
     ['Now', 'Current Atlas map', 'Data Center Atlas', 'https://github.com/kiankyars/datacenter-atlas']
   ];
-  const locations = new Map([
-    [1946, {name:'Philadelphia, Pennsylvania', lat:39.952, lon:-75.191}],
-    [1956, {name:'Suitland, Maryland', lat:38.848, lon:-76.931}],
-    [1966, {name:'Poughkeepsie, New York', lat:41.650, lon:-73.930}],
-    [1976, {name:'Los Angeles, California', lat:34.069, lon:-118.444}],
-    [1986, {name:'Urbana–Champaign, Illinois · NSFNET supercomputing site', lat:40.113, lon:-88.225}],
-    [1996, {name:'CERN, near Geneva, Switzerland', lat:46.233, lon:6.055}],
-    [2006, {name:'Northern Virginia · first AWS region', lat:39.043, lon:-77.488}],
-    [2016, {name:'Prineville, Oregon', lat:44.299, lon:-120.882}]
-  ]);
   // Published snapshots have different coverage. Each number stays with its own scope.
   const countSnapshots = new Map([
-    [2006, {
-      value: '800+',
-      scope: 'carrier-grade colocation sites listed across 50 major markets · Feb 2006',
-      publisher: 'TeleGeography via DCD',
-      url: 'https://www.datacenterdynamics.com/en/news/telegeography-nyc-has-has-most-colocation-space/'
-    }],
-    [2016, {
-      value: '9,540',
-      scope: 'estimated colocation facilities worldwide · 2016',
-      publisher: 'European Commission, Fig. 14',
-      url: 'https://publications.jrc.ec.europa.eu/repository/bitstream/JRC118550/preliminary_report_eu_gpp_data_centres_-_v1.0_october2017_pubsy_1.pdf#page=87'
-    }],
     [2021, {
       value: '700',
       scope: 'hyperscale data centers worldwide · end of Q3 2021',
@@ -190,34 +156,29 @@ a:hover{color:#242524;border-color:#242524}
   ]);
   const archiveMonths = new Map([[2021,'2021/09'],[2022,'2022/12'],[2023,'2023/12'],[2024,'2024/12'],[2025,'2025/12'],[2026,'2026/11']]);
   const ticks = document.getElementById('history-ticks');
-  const milestoneTicks = document.getElementById('history-milestones');
   const recentTicks = document.getElementById('history-recent');
   const archiveSource = document.getElementById('history-archive-source');
   const event = document.getElementById('history-event');
   const coverage = document.getElementById('history-coverage');
   const source = document.getElementById('history-source');
-  const locationLabel = document.getElementById('history-location');
   const countLine = document.getElementById('history-count');
   const countValue = document.getElementById('history-count-value');
   const countScope = document.getElementById('history-count-scope');
   const countSource = document.getElementById('history-count-source');
-  milestoneTicks.style.setProperty('--ticks', milestones.length-archiveMonths.size-1);
   recentTicks.style.setProperty('--ticks', archiveMonths.size);
   let selectedTick;
-  const buttons = milestones.map(([year, description, publisher, url]) => {
+  const buttons = snapshots.map(([year, description, publisher, url]) => {
     const atlas = year === 'Now';
     const button = atlas ? document.getElementById('history-atlas') : document.createElement('button');
     button.type = 'button';
     if(!atlas)button.textContent = year;
     const archiveMonth = archiveMonths.get(year);
-    if(!atlas)button.setAttribute('aria-label', year === 1946 || archiveMonth ? String(year) : 'Decade ending in ' + year);
     button.setAttribute('aria-pressed', 'false');
     button.addEventListener('click', () => {
       selectedTick?.setAttribute('aria-pressed', 'false');
       button.setAttribute('aria-pressed', 'true');
       selectedTick = button;
       event.textContent = description;
-      coverage.hidden = !archiveMonth && !atlas;
       coverage.textContent = year === 'Now'
         ? 'Map layer: Data Center Atlas records, including upcoming sites.'
         : 'Map layer: selected operating and upcoming sites documented by this snapshot.';
@@ -229,9 +190,6 @@ a:hover{color:#242524;border-color:#242524}
         archiveSource.href = 'https://data.caida.org/datasets/peeringdb-v2/' + archiveMonth + '/';
         archiveSource.textContent = 'PeeringDB facility archive (CAIDA)';
       }
-      const location = locations.get(year);
-      locationLabel.hidden = !location;
-      locationLabel.textContent = location?.name ?? '';
       const snapshot = countSnapshots.get(year);
       countLine.hidden = !snapshot;
       countValue.textContent = snapshot?.value ?? '';
@@ -241,9 +199,9 @@ a:hover{color:#242524;border-color:#242524}
         countSource.textContent = snapshot.publisher;
         countSource.href = snapshot.url;
       }
-      ticks.dispatchEvent(new CustomEvent('milestonechange', {detail: {year, location}}));
+      ticks.dispatchEvent(new CustomEvent('milestonechange', {detail: {year}}));
     });
-    if(!atlas)(archiveMonth ? recentTicks : milestoneTicks).appendChild(button);
+    if(!atlas)recentTicks.appendChild(button);
     return button;
   });
   buttons[0].click();
@@ -320,17 +278,6 @@ function animatePulse(pulse,elapsed,duration){
   pulse.material.opacity=.32*(1-progress)**1.5;
 }
 
-const milestoneMarker=new THREE.Group();
-const milestonePulse=makePulse(.032);
-const milestonePin=new THREE.Mesh(
-  new THREE.CircleGeometry(.023,32),
-  new THREE.MeshBasicMaterial({color:markerBlue,transparent:true,opacity:.78,depthWrite:false})
-);
-milestonePin.renderOrder=4;
-milestoneMarker.add(milestonePulse,milestonePin);
-milestoneMarker.visible=false;
-globe.add(milestoneMarker);
-let milestonePulseStart=0;
 // A quiet, evenly spaced pointillist land layer.
 const landDots=new THREE.Group();globe.add(landDots);
 const continentOutlines=new Map();
@@ -791,7 +738,7 @@ addEventListener('keydown',e=>{if(e.key==='Escape')hide();});
 function resize(){const w=innerWidth,h=innerHeight;camera.aspect=w/h;camera.fov=w<690?48:36;camera.updateProjectionMatrix();const headerTop=document.querySelector('header').getBoundingClientRect().top;const footerTop=document.querySelector(w<=680?'footer':'.footnote').getBoundingClientRect().top;const available=Math.max(240,footerTop-headerTop-24);const desired=Math.max(160,Math.min(h*.72,available)-60);const fov=camera.fov*Math.PI/180;const distance=R/Math.sin(Math.atan(desired/h*Math.tan(fov/2)*2));camera.position.setLength(Math.max(5.95,distance));controls.minDistance=2.8;renderer.setSize(w,h);}
 addEventListener('resize',resize);resize();
 const timelineTicks=document.getElementById('history-ticks');
-timelineTicks.addEventListener('milestonechange',({detail:{year,location}})=>{
+timelineTicks.addEventListener('milestonechange',({detail:{year}})=>{
   selectedYear=year;
   const historical=year!=='Now';
   historicalGroup.mesh.count=historical?historicalSites.filter(({p})=>p.documented_by<=year).length:0;
@@ -799,21 +746,7 @@ timelineTicks.addEventListener('milestonechange',({detail:{year,location}})=>{
   for(const group of siteGroups)group.mesh.visible=group.historical===historical;
   hide();
   updateCount();
-  milestoneMarker.visible=Boolean(location);
   if(!historical)loadSites();
-  if(!location)return;
-  const {lat,lon}=location;
-  const direction=xyz(lat,lon,1);
-  milestonePulseStart=performance.now();
-  milestoneMarker.position.copy(direction).multiplyScalar(R+.045);
-  milestoneMarker.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),direction);
-  controls.autoRotate=false;
-  controls.enableDamping=false;
-  controls.update();
-  controls.enableDamping=true;
-  camera.position.copy(direction.multiplyScalar(camera.position.length()));
-  controls.update();
-  updateFocus();
 });
 timelineTicks.querySelector('[aria-pressed="true"]')?.click();
 land();
@@ -823,7 +756,6 @@ let frame=0;
   controls.update();
   globe.updateMatrixWorld();
   if(landPositions.length&&frame++%18===0)updateFocus();
-  if(milestoneMarker.visible)animatePulse(milestonePulse,time-milestonePulseStart,1450);
   if(sitePulse.visible){
     sitePulse.quaternion.copy(camera.quaternion);
     animatePulse(sitePulse,time-sitePulseStart,1050);
