@@ -286,34 +286,51 @@ if(inPolygon(lon,lat,item.poly))return item.continent;
 // The source country keeps coastal and island sites classifiable at this map's resolution.
 return countryContinents.get(String(country??'').trim().toLowerCase())||'';
 }
+function sitesInView(regional=false){
+  const historical=selectedYear!=='Now';
+  return siteGroups.filter(group=>group.historical===historical)
+    .flatMap(group=>group.items.slice(0,group.mesh.count))
+    .filter(site=>!regional||!activeContinent||site.continent===activeContinent);
+}
 function updateCount(){
   const count=document.getElementById('count');
   const total=document.getElementById('countTotal');
   const unit=document.querySelector('.unit');
   const historical=selectedYear!=='Now';
+  const worldwide=sitesInView();
+  const regional=sitesInView(true);
   updateGlobeStatus();
   if(siteListDialog.open)renderSiteList();
-  document.getElementById('historical-colocation-key').hidden=!historical||
-    !historicalSites.slice(0,historicalGroup.mesh.count).some(({p})=>p.colocation);
+  document.getElementById('historical-colocation-key').hidden=!historical||!worldwide.some(({p})=>p.colocation);
+  const scope=activeContinent?' in '+activeContinent:'';
+  const available=historical||siteTotal!==null;
+  total.hidden=!available;
+  count.textContent=available?regional.length.toLocaleString():'—';
+  if(available)document.getElementById('totalCount').textContent=worldwide.length.toLocaleString();
   if(historical){
-    total.hidden=true;
-    const operating=historicalGroup.mesh.count;
-    const upcoming=historicalUpcomingGroup.mesh.count;
-    count.textContent=(operating+upcoming).toLocaleString();
-    unit.textContent=operating+' operating · '+upcoming+' upcoming · selected sites';
-    return;
+    const upcoming=regional.filter(({p})=>p.upcoming).length;
+    unit.textContent=(regional.length-upcoming)+' operating · '+upcoming+' upcoming · historical sample'+scope;
+  }else{
+    unit.textContent='mapped sites'+scope;
   }
-  unit.textContent=activeContinent?'mapped sites in '+activeContinent:'mapped sites';
-  total.hidden=siteTotal===null;
-  if(siteTotal===null){
-    count.textContent='—';
-    return;
+}
+const mutedSiteColor=new THREE.Color(0xdce1e3);
+const activeSiteColor=new THREE.Color();
+function updateSiteColors(){
+  for(const group of siteGroups){
+    if(!group.mesh.visible)continue;
+    const {mesh,items,color,historical}=group;
+    for(let i=0;i<mesh.count;i++){
+      const {p,continent}=items[i];
+      if(activeContinent&&continent!==activeContinent){
+        mesh.setColorAt(i,mutedSiteColor);
+      }else{
+        activeSiteColor.setHex(historical&&p.colocation?colocationColor:historical&&!p.upcoming?markerBlue:color);
+        mesh.setColorAt(i,activeSiteColor);
+      }
+    }
+    if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
   }
-  const visibleCount=activeContinent
-    ?siteGroups.reduce((sum,group)=>sum+(group.historical?0:group.items.filter(item=>item.continent===activeContinent).length),0)
-    :siteTotal;
-  count.textContent=visibleCount.toLocaleString();
-  document.getElementById('totalCount').textContent=siteTotal.toLocaleString();
 }
 function updateFocus(){
 if(!landPositions.length)return;
@@ -333,12 +350,7 @@ const normal=new THREE.Color(0xb9bdbb),highlight=new THREE.Color(0x929c99);
 for(let i=0;i<landContinentIds.length;i++)landMesh.setColorAt(i,next&&landContinentIds[i]===next?highlight:normal);
 landMesh.instanceColor.needsUpdate=true;
 }
-for(const group of siteGroups){
-if(group.historical)continue;
-const base=new THREE.Color(group.color),muted=new THREE.Color(0xdce1e3);
-group.items.forEach((item,i)=>group.mesh.setColorAt(i,!next||item.continent===next?base:muted));
-if(group.mesh.instanceColor)group.mesh.instanceColor.needsUpdate=true;
-}
+updateSiteColors();
 hide();
 }
 function insideRing(x,y,ring){let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const a=ring[i],b=ring[j];if(((a[1]>y)!==(b[1]>y))&&(x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0]))inside=!inside;}return inside;}
@@ -498,11 +510,20 @@ const historicalPlans=[
   return {...site,p:{...site.p,announced,source_url,colocation:false,upcoming:true}};
 });
 historicalPlans.push({
+  c:[-91.6360844,32.5289242],
+  p:{site_id:'vcc-site-33110c77390f92dc4432',name:'Meta Richland Parish Data Center',city:'Richland Parish, Louisiana',country:'United States',announced:2025,
+    upcoming:true,approximate:true,source_url:'https://about.fb.com/news/2025/10/meta-blue-owl-capital-develop-hyperion-data-center/'}
+},{
+  c:[-97.0142789,30.9998837],
+  p:{site_id:'vcc-site-00432e4e9c8e2d91ff76',name:'Stargate Milam County (SB Energy campus)',city:'Milam County, Texas',country:'United States',announced:2026,
+    upcoming:true,approximate:true,source_url:'https://sbenergy.com/openai-and-softbank-group-partner-with-sb-energy/'}
+},{
   c:[-95.99,36.15],
   p:{name:'Meta Tulsa Data Center',city:'Tulsa, Oklahoma',country:'United States',announced:2026,
     upcoming:true,approximate:true,source_url:'https://about.fb.com/news/2026/04/breaking-ground-new-ai-optimized-data-center-tulsa-oklahoma/'}
 });
 const historicalUpcomingGroup=addSiteGroup(historicalPlans,'historical',0xb6d8fa);
+historicalUpcomingGroup.mesh.material.color.setHex(0xffffff);
 const upcomingRecordIndex=records.length-1;
 const upcomingMarker=new THREE.Object3D();
 historicalUpcomingGroup.mesh.visible=false;
@@ -512,7 +533,9 @@ function setHistoricalUpcoming(year){
     p.announced<=year && (p.documented_by===undefined || year<p.documented_by));
   const {mesh}=historicalUpcomingGroup;
   historicalUpcomingGroup.items=plans;
-  records[upcomingRecordIndex]=plans.map(({p,c},i)=>{
+  records[upcomingRecordIndex]=plans.map((item,i)=>{
+    const {p,c}=item;
+    item.continent=continentAt(+c[0],+c[1],p.country||p.country_name);
     upcomingMarker.position.copy(xyz(+c[1],+c[0],R+.025));
     upcomingMarker.updateMatrix();
     mesh.setMatrixAt(i,upcomingMarker.matrix);
@@ -651,7 +674,7 @@ if(!hit||hit.object===sphere)return null;
 const group=dots.indexOf(hit.object);
 if(group<0)return null;
 const p=records[group]?.[hit.instanceId];
-if(activeContinent&&!siteGroups[group].historical&&siteGroups[group].items[hit.instanceId]?.continent!==activeContinent)return null;
+if(activeContinent&&siteGroups[group].items[hit.instanceId]?.continent!==activeContinent)return null;
 return p?{p,id:group+':'+hit.instanceId}:null;
 }
 function placeTooltip(e){
@@ -710,12 +733,9 @@ const siteListToggle=document.getElementById('site-list-toggle');
 
 function renderSiteList(){
   const historical=selectedYear!=='Now';
-  const sites=historical
-    ? [...historicalGroup.items.slice(0,historicalGroup.mesh.count),...historicalUpcomingGroup.items]
-    : siteGroups.filter(group=>!group.historical).flatMap(group=>group.items)
-      .filter(site=>!activeContinent||site.continent===activeContinent);
+  const sites=sitesInView(true);
   sites.sort((a,b)=>label(a.p).localeCompare(label(b.p)));
-  const scope=historical?'Selected sites in '+selectedYear:'Current Atlas · '+(activeContinent||'Worldwide');
+  const scope=(historical?selectedYear+' historical sample':'Current Atlas')+' · '+(activeContinent||'Worldwide');
   siteListSummary.textContent=scope+' · '+sites.length.toLocaleString()+' '+(sites.length===1?'site':'sites');
   siteListEmpty.hidden=sites.length>0;
   siteListEmpty.textContent=!historical&&liveSiteStatus?liveSiteStatus:'No sites in this view.';
@@ -767,6 +787,7 @@ timelineTicks.addEventListener('milestonechange',({detail:{year}})=>{
   historicalGroup.mesh.count=historical?historicalSites.filter(({p})=>p.documented_by<=year).length:0;
   setHistoricalUpcoming(year);
   for(const group of siteGroups)group.mesh.visible=group.historical===historical;
+  updateSiteColors();
   hide();
   updateCount();
   if(!historical)loadSites();
