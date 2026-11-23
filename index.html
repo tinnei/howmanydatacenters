@@ -28,7 +28,24 @@ a:hover{color:#242524;border-color:#242524}
 .history{width:min(360px,100%);min-width:0}
 .history-ticks{position:relative;display:grid;grid-template-columns:repeat(var(--ticks),minmax(0,1fr))}
 .history-ticks + .history-ticks{margin-top:3px}
-.history-atlas{display:block;margin:6px 0 0 auto;padding:4px 0;border:0;border-bottom:1px solid #d5d7d5;background:none;color:#686e6b;font:inherit;font-size:10px;cursor:pointer}
+.history-actions{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:6px}
+.history-atlas{display:block;padding:4px 0;border:0;border-bottom:1px solid #d5d7d5;background:none;color:#686e6b;font:inherit;font-size:10px;cursor:pointer}
+.list-toggle{display:grid;place-items:center;width:28px;height:28px;border:1px solid #d5d7d5;border-radius:6px;background:#fff;color:#454b48;cursor:pointer}
+.list-toggle:hover{border-color:currentColor}
+.list-icon{width:15px;height:14px;background:radial-gradient(circle,currentColor 1px,transparent 1.4px) 0 0/4px 5px repeat-y,linear-gradient(currentColor,currentColor) 5px 2px/10px 1px no-repeat,linear-gradient(currentColor,currentColor) 5px 7px/10px 1px no-repeat,linear-gradient(currentColor,currentColor) 5px 12px/10px 1px no-repeat}
+.site-list-dialog{width:min(440px,calc(100% - 32px));max-height:min(65dvh,580px);padding:0;border:1px solid #d5d7d5;border-radius:8px;color:var(--ink);background:#fff}
+.site-list-dialog::backdrop{background:#26272622}
+.site-list-header{position:sticky;top:0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px;background:#fff;border-bottom:1px solid #e6e7e5}
+.site-list-header h2{margin:0;font-size:16px;font-weight:650}
+.site-list-header p{margin:4px 0 0;font-size:11px;color:#686e6b}
+.site-list-close{background:none;border:0;padding:0 4px;color:#454b48;font:inherit;font-size:20px;cursor:pointer}
+.site-list-items{margin:0;padding:0 18px;list-style:none}
+.site-list-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:4px 12px;padding:10px 0;border-bottom:1px solid #e6e7e5;font-size:12px;overflow-wrap:anywhere}
+.site-list-row:last-child{border-bottom:0}
+.site-list-location,.site-list-status{font-size:11px;color:#686e6b}
+.site-list-location{grid-column:1}
+.site-list-status::before{content:"";display:inline-block;width:6px;height:6px;margin-right:5px;border-radius:50%;background:var(--site-color,#9aa7b6)}
+.site-list-empty{margin:0;padding:16px 18px;font-size:12px;color:#686e6b}
 .history-atlas[aria-pressed="true"]{color:var(--ink);border-bottom-color:currentColor;font-weight:650}
 .history-ticks::before{content:"";position:absolute;top:9px;left:calc(50% / var(--ticks));right:calc(50% / var(--ticks));border-top:1px solid #d5d9d7;pointer-events:none}
 .history-ticks button{position:relative;border:0;background:none;padding:6px 0 5px;color:#6d7471;cursor:pointer;font:inherit;font-size:10px;font-variant-numeric:tabular-nums}
@@ -88,10 +105,21 @@ a:hover{color:#242524;border-color:#242524}
   <div id="history-ticks">
     <div class="history-ticks" id="history-milestones" role="group" aria-label="Historical milestones"></div>
     <div class="history-ticks" id="history-recent" role="group" aria-label="Recent snapshots"></div>
-    <button type="button" class="history-atlas" id="history-atlas">Browse current Atlas</button>
+    <div class="history-actions">
+      <button type="button" class="history-atlas" id="history-atlas">Browse current Atlas</button>
+      <button type="button" class="list-toggle" id="site-list-toggle" aria-label="Show site list" title="Show site list" aria-haspopup="dialog" aria-controls="site-list-dialog"><span class="list-icon" aria-hidden="true"></span></button>
+    </div>
   </div>
 </section>
 </footer>
+<dialog class="site-list-dialog" id="site-list-dialog" aria-labelledby="site-list-title">
+  <div class="site-list-header">
+    <div><h2 id="site-list-title">Data centers</h2><p id="site-list-summary" aria-live="polite"></p></div>
+    <form method="dialog"><button class="site-list-close" aria-label="Close site list" autofocus>×</button></form>
+  </div>
+  <ul class="site-list-items" id="site-list-items" role="list"></ul>
+  <p class="site-list-empty" id="site-list-empty" hidden></p>
+</dialog>
 <script>
 {
   const milestones = [
@@ -328,6 +356,7 @@ function updateCount(){
   const unit=document.querySelector('.unit');
   const historical=selectedYear!=='Now';
   updateGlobeStatus();
+  if(siteListDialog.open)renderSiteList();
   document.getElementById('historical-colocation-key').hidden=!historical||
     !historicalSites.slice(0,historicalGroup.mesh.count).some(({p})=>p.colocation);
   if(historical){
@@ -703,6 +732,61 @@ const hit=pick(e);if(!hit){hide();return;}
 lastHover=hit.id;showSite(hit,e,true);
 });
 document.getElementById('tipclose').addEventListener('click',hide);
+const siteListDialog=document.getElementById('site-list-dialog');
+const siteListItems=document.getElementById('site-list-items');
+const siteListSummary=document.getElementById('site-list-summary');
+const siteListEmpty=document.getElementById('site-list-empty');
+const siteListToggle=document.getElementById('site-list-toggle');
+
+function renderSiteList(){
+  const historical=selectedYear!=='Now';
+  const sites=historical
+    ? [...historicalGroup.items.slice(0,historicalGroup.mesh.count),...historicalUpcomingGroup.items]
+    : siteGroups.filter(group=>!group.historical).flatMap(group=>group.items)
+      .filter(site=>!activeContinent||site.continent===activeContinent);
+  sites.sort((a,b)=>label(a.p).localeCompare(label(b.p)));
+  const scope=historical?'Selected sites in '+selectedYear:'Current Atlas · '+(activeContinent||'Worldwide');
+  siteListSummary.textContent=scope+' · '+sites.length.toLocaleString()+' '+(sites.length===1?'site':'sites');
+  siteListEmpty.hidden=sites.length>0;
+  siteListEmpty.textContent=!historical&&liveSiteStatus?liveSiteStatus:'No sites in this view.';
+  const rows=document.createDocumentFragment();
+  for(const {p,kind} of sites){
+    const row=document.createElement('li');
+    row.className='site-list-row';
+    const url=safeUrl(first(p,['source_url','evidence_url','website','url']));
+    const name=document.createElement(url?'a':'span');
+    name.textContent=label(p);
+    if(url){
+      name.href=url;
+      name.target='_blank';
+      name.rel='noopener noreferrer';
+    }
+    const status=document.createElement('span');
+    status.className='site-list-status';
+    if(p.upcoming||kind==='upcoming'){
+      status.textContent='Upcoming';
+      status.style.setProperty('--site-color','#b6d8fa');
+    }else if(kind==='historical'||kind==='existing'){
+      status.textContent=p.colocation?'Operating colocation':'Operating';
+      status.style.setProperty('--site-color',p.colocation?'#b56524':'#2474dc');
+    }else{
+      status.textContent='Unverified';
+    }
+    const location=document.createElement('span');
+    location.className='site-list-location';
+    location.textContent=display(p);
+    row.append(name,status,location);
+    rows.appendChild(row);
+  }
+  siteListItems.replaceChildren(rows);
+}
+
+siteListToggle.addEventListener('click',()=>{
+  hide();
+  renderSiteList();
+  siteListDialog.showModal();
+});
+siteListDialog.addEventListener('close',()=>siteListToggle.focus());
 addEventListener('keydown',e=>{if(e.key==='Escape')hide();});
 function resize(){const w=innerWidth,h=innerHeight;camera.aspect=w/h;camera.fov=w<690?48:36;camera.updateProjectionMatrix();const headerTop=document.querySelector('header').getBoundingClientRect().top;const footerTop=document.querySelector(w<=680?'footer':'.footnote').getBoundingClientRect().top;const available=Math.max(240,footerTop-headerTop-24);const desired=Math.max(160,Math.min(h*.72,available)-60);const fov=camera.fov*Math.PI/180;const distance=R/Math.sin(Math.atan(desired/h*Math.tan(fov/2)*2));camera.position.setLength(Math.max(5.95,distance));controls.minDistance=2.8;renderer.setSize(w,h);}
 addEventListener('resize',resize);resize();
