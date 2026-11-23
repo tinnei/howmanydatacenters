@@ -27,6 +27,7 @@ a:hover{color:#242524;border-color:#242524}
 .control{font-size:10px;color:#a4a5a4;letter-spacing:.03em;white-space:nowrap}
 .history{width:min(360px,100%);min-width:0}
 .history-ticks{position:relative;display:grid;grid-template-columns:repeat(var(--ticks),minmax(0,1fr))}
+.history-ticks + .history-ticks{margin-top:3px}
 .history-ticks::before{content:"";position:absolute;top:9px;left:calc(50% / var(--ticks));right:calc(50% / var(--ticks));border-top:1px solid #d5d9d7;pointer-events:none}
 .history-ticks button{position:relative;border:0;background:none;padding:6px 0 5px;color:#6d7471;cursor:pointer;font:inherit;font-size:10px;font-variant-numeric:tabular-nums}
 .history-ticks button::before{content:"";display:block;width:7px;height:7px;border-radius:50%;margin:0 auto 5px;background:#fff;border:1px solid #9da7a2}
@@ -77,9 +78,13 @@ a:hover{color:#242524;border-color:#242524}
     <div class="history-sources">
       <a id="history-source" target="_blank" rel="noopener noreferrer"></a>
       <a id="history-count-source" target="_blank" rel="noopener noreferrer" hidden></a>
+      <a id="history-archive-source" target="_blank" rel="noopener noreferrer" hidden></a>
     </div>
   </div>
-  <div class="history-ticks" id="history-ticks" role="group" aria-label="Choose a year"></div>
+  <div id="history-ticks">
+    <div class="history-ticks" id="history-milestones" role="group" aria-label="Historical milestones"></div>
+    <div class="history-ticks" id="history-recent" role="group" aria-label="Recent snapshots"></div>
+  </div>
 </section>
 </footer>
 <script>
@@ -93,6 +98,11 @@ a:hover{color:#242524;border-color:#242524}
     [1996, '1990 · The first web server runs at CERN, making websites possible.', 'CERN', 'https://home.cern/science/computing/the-birth-of-the-web/short-history-web/'],
     [2006, '2006 · Amazon EC2 launches, letting customers rent computing capacity by the hour.', 'AWS', 'https://aws.amazon.com/blogs/aws/ec2-instance-history/'],
     [2016, '2011 · Facebook shares designs from its Oregon data center through the Open Compute Project.', 'Meta', 'https://about.fb.com/news/2011/04/facebook-launches-open-compute-project/'],
+    [2021, 'September 2021 snapshot'],
+    [2022, 'December 2022 facility archive'],
+    [2023, 'December 2023 snapshot'],
+    [2024, 'December 2024 snapshot'],
+    [2025, 'December 2025 snapshot'],
     ['Now', '2026 · The IEA reports rising electricity demand from data centers as AI use expands.', 'International Energy Agency', 'https://www.iea.org/news/data-centre-electricity-use-surged-in-2025-even-with-tightening-bottlenecks-driving-a-scramble-for-solutions']
   ];
   const locations = new Map([
@@ -119,6 +129,30 @@ a:hover{color:#242524;border-color:#242524}
       publisher: 'European Commission, Fig. 14',
       url: 'https://publications.jrc.ec.europa.eu/repository/bitstream/JRC118550/preliminary_report_eu_gpp_data_centres_-_v1.0_october2017_pubsy_1.pdf#page=87'
     }],
+    [2021, {
+      value: '700',
+      scope: 'hyperscale data centers worldwide · end of Q3 2021',
+      publisher: 'Synergy Research Group',
+      url: 'https://www.srgresearch.com/articles/as-hyperscale-data-center-capacity-doubles-in-under-four-years-the-us-still-accounts-for-half-of-the-total'
+    }],
+    [2023, {
+      value: '992',
+      scope: 'hyperscale data centers worldwide · year-end 2023',
+      publisher: 'Synergy Research Group',
+      url: 'https://www.srgresearch.com/articles/hyperscale-data-centers-hit-the-thousand-mark-total-capacity-is-doubling-every-four-years'
+    }],
+    [2024, {
+      value: '1,136',
+      scope: 'hyperscale data centers worldwide · year-end 2024',
+      publisher: 'Synergy Research Group',
+      url: 'https://www.srgresearch.com/articles/hyperscale-data-center-count-hits-1136-average-size-increases-us-accounts-for-54-of-total-capacity'
+    }],
+    [2025, {
+      value: '1,360',
+      scope: 'hyperscale data centers worldwide · year-end 2025',
+      publisher: 'Synergy Research Group',
+      url: 'https://www.srgresearch.com/articles/hyperscale-operators-to-account-for-67-of-all-data-center-capacity-by-2031'
+    }],
     ['Now', {
       value: '13,373',
       scope: 'data center listings in 185 countries · Nov 2026 snapshot',
@@ -126,7 +160,11 @@ a:hover{color:#242524;border-color:#242524}
       url: 'https://www.datacentermap.com/datacenters/'
     }]
   ]);
+  const archiveMonths = new Map([[2021,'2021/09'],[2022,'2022/12'],[2023,'2023/12'],[2024,'2024/12'],[2025,'2025/12'],['Now','2026/11']]);
   const ticks = document.getElementById('history-ticks');
+  const milestoneTicks = document.getElementById('history-milestones');
+  const recentTicks = document.getElementById('history-recent');
+  const archiveSource = document.getElementById('history-archive-source');
   const event = document.getElementById('history-event');
   const source = document.getElementById('history-source');
   const locationLabel = document.getElementById('history-location');
@@ -134,21 +172,29 @@ a:hover{color:#242524;border-color:#242524}
   const countValue = document.getElementById('history-count-value');
   const countScope = document.getElementById('history-count-scope');
   const countSource = document.getElementById('history-count-source');
-  ticks.style.setProperty('--ticks', milestones.length);
+  milestoneTicks.style.setProperty('--ticks', milestones.length-archiveMonths.size);
+  recentTicks.style.setProperty('--ticks', archiveMonths.size);
   let selectedTick;
   const buttons = milestones.map(([year, description, publisher, url]) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.textContent = year;
-    button.setAttribute('aria-label', year === 'Now' ? 'Now' : year === 1946 ? '1946' : 'Decade ending in ' + year);
+    const archiveMonth = archiveMonths.get(year);
+    button.setAttribute('aria-label', year === 'Now' || year === 1946 || archiveMonth ? String(year) : 'Decade ending in ' + year);
     button.setAttribute('aria-pressed', 'false');
     button.addEventListener('click', () => {
       selectedTick?.setAttribute('aria-pressed', 'false');
       button.setAttribute('aria-pressed', 'true');
       selectedTick = button;
       event.textContent = description;
-      source.textContent = publisher;
-      source.href = url;
+      source.hidden = !url;
+      source.textContent = publisher ?? '';
+      if(url)source.href = url;
+      archiveSource.hidden = !archiveMonth;
+      if(archiveMonth){
+        archiveSource.href = 'https://data.caida.org/datasets/peeringdb-v2/' + archiveMonth + '/';
+        archiveSource.textContent = 'PeeringDB facility archive (CAIDA)';
+      }
       const location = locations.get(year);
       locationLabel.hidden = !location;
       locationLabel.textContent = location?.name ?? '';
@@ -163,7 +209,7 @@ a:hover{color:#242524;border-color:#242524}
       }
       ticks.dispatchEvent(new CustomEvent('milestonechange', {detail: {year, location}}));
     });
-    ticks.appendChild(button);
+    (archiveMonth ? recentTicks : milestoneTicks).appendChild(button);
     return button;
   });
   buttons[0].click();
