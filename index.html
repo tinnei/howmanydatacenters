@@ -53,12 +53,11 @@ a:hover{color:#242524;border-color:#242524}
 .history-ticks button[aria-pressed="true"]::before{background:#617572;border-color:#617572}
 .history-ticks button:hover::before{border-color:#262726}
 .history-ticks button:focus-visible{outline:1px solid #617572;outline-offset:-1px;border-radius:4px}
-.history-detail{margin-bottom:8px;color:#454b48;font-size:11px;line-height:1.5}
-.history-event,.history-count{margin:0 0 4px}
-.history-count-label,.history-coverage{color:#686e6b}
-.history-coverage{margin:0 0 4px}
-.history-count strong{color:var(--ink);font-size:14px;font-variant-numeric:tabular-nums}
-.history-sources{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:10px}
+.history-detail{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px;color:#454b48;font-size:11px;line-height:1.5}
+.history-event{margin:0;font-variant-numeric:tabular-nums}
+.history-source-menu{position:relative;flex:none;font-size:10px;color:#686e6b}
+.history-source-menu summary{cursor:pointer}
+.history-sources{position:absolute;right:0;bottom:calc(100% + 4px);display:grid;gap:6px;width:max-content;max-width:calc(100vw - 48px);padding:8px 10px;background:#fff;border:1px solid #d5d7d5;border-radius:6px}
 #tooltip{position:fixed;z-index:4;padding:15px 17px;background:#fff;border:1px solid #e8e8e8;box-shadow:0 10px 36px #22222213;border-radius:8px;width:min(285px,calc(100vw - 28px));pointer-events:none;opacity:0;transform:translateY(5px);transition:opacity .15s,transform .15s}
 #tooltip.visible{opacity:1;transform:translateY(0)}#tooltip.pinned{pointer-events:auto}#tooltip .close{display:none;position:absolute;top:7px;right:9px;background:none;border:0;color:#8b9290;font-size:18px;cursor:pointer}#tooltip.pinned .close{display:block}#tooltip .tag{font-size:10px;color:#6d7775;margin-bottom:8px}#tooltip .more{font-size:10px;color:#8c9491;line-height:1.7;margin-top:9px}#tooltip .more:empty{display:none}#tooltip a{font-size:10px;display:inline-block;margin-top:8px}
 #tooltip strong{display:block;font-size:12px;font-weight:550;line-height:1.5}
@@ -88,16 +87,15 @@ a:hover{color:#242524;border-color:#242524}
 <div class="footnote">Data: <a href="https://github.com/kiankyars/datacenter-atlas" target="_blank" rel="noopener noreferrer">Data Center Atlas</a> · CC BY 4.0 · <span style="color:#2474dc">●</span> operating · <span style="color:#b6d8fa">●</span> upcoming · <span style="color:#9aa7b6">●</span> unverified<span id="historical-colocation-key" hidden> · <span style="color:#b56524">●</span> operating colocation</span></div>
 <section class="history" aria-label="Data center history">
   <div class="history-detail">
-    <div aria-live="polite" aria-atomic="true">
-      <p id="history-event" class="history-event"></p>
-      <p id="history-coverage" class="history-coverage"></p>
-      <p id="history-count" class="history-count" hidden><span class="history-count-label">Reported by source · </span><strong id="history-count-value"></strong> <span id="history-count-scope"></span></p>
-    </div>
-    <div class="history-sources">
-      <a id="history-source" target="_blank" rel="noopener noreferrer"></a>
-      <a id="history-count-source" target="_blank" rel="noopener noreferrer" hidden></a>
-      <a id="history-archive-source" target="_blank" rel="noopener noreferrer" hidden></a>
-    </div>
+    <p id="history-event" class="history-event" aria-live="polite"></p>
+    <details id="history-source-menu" class="history-source-menu">
+      <summary>Sources</summary>
+      <div class="history-sources">
+        <a id="history-source" target="_blank" rel="noopener noreferrer" hidden></a>
+        <a id="history-count-source" target="_blank" rel="noopener noreferrer" hidden></a>
+        <a id="history-archive-source" target="_blank" rel="noopener noreferrer" hidden></a>
+      </div>
+    </details>
   </div>
   <div id="history-ticks">
     <div class="history-ticks" id="history-recent" role="group" aria-label="Recent snapshots"></div>
@@ -124,32 +122,28 @@ a:hover{color:#242524;border-color:#242524}
     [2023, 'December 2023 snapshot'],
     [2024, 'December 2024 snapshot'],
     [2025, 'December 2025 snapshot'],
-    [2026, '2026 · The IEA reports rising electricity demand from data centers as AI use expands.', 'International Energy Agency', 'https://www.iea.org/news/data-centre-electricity-use-surged-in-2025-even-with-tightening-bottlenecks-driving-a-scramble-for-solutions'],
+    [2026, '2026 snapshot', 'International Energy Agency', 'https://www.iea.org/news/data-centre-electricity-use-surged-in-2025-even-with-tightening-bottlenecks-driving-a-scramble-for-solutions'],
     ['Now', 'Current Atlas map', 'Data Center Atlas', 'https://github.com/kiankyars/datacenter-atlas']
   ];
   // Published snapshots have different coverage. Each number stays with its own scope.
   const countSnapshots = new Map([
     [2021, {
       value: '700',
-      scope: 'hyperscale data centers worldwide · end of Q3 2021',
       publisher: 'Synergy Research Group',
       url: 'https://www.srgresearch.com/articles/as-hyperscale-data-center-capacity-doubles-in-under-four-years-the-us-still-accounts-for-half-of-the-total'
     }],
     [2023, {
       value: '992',
-      scope: 'hyperscale data centers worldwide · year-end 2023',
       publisher: 'Synergy Research Group',
       url: 'https://www.srgresearch.com/articles/hyperscale-data-centers-hit-the-thousand-mark-total-capacity-is-doubling-every-four-years'
     }],
     [2024, {
       value: '1,136',
-      scope: 'hyperscale data centers worldwide · year-end 2024',
       publisher: 'Synergy Research Group',
       url: 'https://www.srgresearch.com/articles/hyperscale-data-center-count-hits-1136-average-size-increases-us-accounts-for-54-of-total-capacity'
     }],
     [2025, {
       value: '1,360',
-      scope: 'hyperscale data centers worldwide · year-end 2025',
       publisher: 'Synergy Research Group',
       url: 'https://www.srgresearch.com/articles/hyperscale-operators-to-account-for-67-of-all-data-center-capacity-by-2031'
     }]
@@ -159,11 +153,8 @@ a:hover{color:#242524;border-color:#242524}
   const recentTicks = document.getElementById('history-recent');
   const archiveSource = document.getElementById('history-archive-source');
   const event = document.getElementById('history-event');
-  const coverage = document.getElementById('history-coverage');
+  const sourceMenu = document.getElementById('history-source-menu');
   const source = document.getElementById('history-source');
-  const countLine = document.getElementById('history-count');
-  const countValue = document.getElementById('history-count-value');
-  const countScope = document.getElementById('history-count-scope');
   const countSource = document.getElementById('history-count-source');
   recentTicks.style.setProperty('--ticks', archiveMonths.size);
   let selectedTick;
@@ -178,10 +169,9 @@ a:hover{color:#242524;border-color:#242524}
       selectedTick?.setAttribute('aria-pressed', 'false');
       button.setAttribute('aria-pressed', 'true');
       selectedTick = button;
-      event.textContent = description;
-      coverage.textContent = year === 'Now'
-        ? 'Map layer: Data Center Atlas records, including upcoming sites.'
-        : 'Map layer: selected operating and upcoming sites documented by this snapshot.';
+      const snapshot = countSnapshots.get(year);
+      event.textContent = snapshot ? snapshot.value + ' hyperscale data centers worldwide' : description;
+      sourceMenu.open = false;
       source.hidden = !url;
       source.textContent = publisher ?? '';
       if(url)source.href = url;
@@ -190,10 +180,6 @@ a:hover{color:#242524;border-color:#242524}
         archiveSource.href = 'https://data.caida.org/datasets/peeringdb-v2/' + archiveMonth + '/';
         archiveSource.textContent = 'PeeringDB facility archive (CAIDA)';
       }
-      const snapshot = countSnapshots.get(year);
-      countLine.hidden = !snapshot;
-      countValue.textContent = snapshot?.value ?? '';
-      countScope.textContent = snapshot?.scope ?? '';
       countSource.hidden = !snapshot;
       if(snapshot){
         countSource.textContent = snapshot.publisher;
