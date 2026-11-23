@@ -99,7 +99,7 @@ a:hover{color:#242524;border-color:#242524}
     [2006, '2006 · Amazon EC2 launches, letting customers rent computing capacity by the hour.', 'AWS', 'https://aws.amazon.com/blogs/aws/ec2-instance-history/'],
     [2016, '2011 · Facebook shares designs from its Oregon data center through the Open Compute Project.', 'Meta', 'https://about.fb.com/news/2011/04/facebook-launches-open-compute-project/'],
     [2021, 'September 2021 snapshot'],
-    [2022, 'December 2022 facility archive'],
+    [2022, 'December 2022 snapshot'],
     [2023, 'December 2023 snapshot'],
     [2024, 'December 2024 snapshot'],
     [2025, 'December 2025 snapshot'],
@@ -468,9 +468,23 @@ const historicalSites=[
   [1999,'Equinix first IBX facility',39.016,-77.460,'Ashburn, Virginia','United States','https://investor.equinix.com/sec-filings/all-sec-filings/content/0001012870-99-004804/0001012870-99-004804.pdf',true],
   [2011,'Facebook Prineville Data Center',44.301,-120.872,'Prineville, Oregon','United States','https://about.fb.com/news/2011/04/facebook-launches-open-compute-project/'],
   [2013,'Facebook Luleå Data Center',65.617,22.135,'Luleå','Sweden','https://about.fb.com/news/2013/06/data-center-update-lulea-goes-live/'],
-  [2013,'Google Singapore Data Center',1.367,103.694,'Jurong West','Singapore','https://www.datacenters.google/locations/singapore/']
-].map(([documented_by,name,lat,lon,city,country,source_url,colocation=false])=>({
-  p:{name,city,country,documented_by,source_url,colocation},c:[lon,lat],kind:'historical'
+  [2013,'Google Singapore Data Center',1.367,103.694,'Jurong West','Singapore','https://www.datacenters.google/locations/singapore/'],
+  [2020,"Google Fredericia Data Center",55.57,9.75,"Fredericia","Denmark","https://blog.google/company-news/inside-google/around-the-globe/google-europe/data-centers-europe-green-economic-recovery/",false,true],
+  [2020,"Google Middenmeer Data Center",52.81,4.99,"Middenmeer","Netherlands","https://blog.google/company-news/inside-google/around-the-globe/google-europe/data-centers-europe-green-economic-recovery/",false,true],
+  [2021,"Meta Eagle Mountain Data Center",40.31,-112.01,"Eagle Mountain, Utah","United States","https://datacenters.atmeta.com/2021/07/utah-county-we-are-online/",false,true],
+  [2021,"Equinix Frankfurt FR8",50.11,8.68,"Frankfurt","Germany","https://d1io3yog0oux5.cloudfront.net/_930b224051bfc4f068c930283bb6bc93/equinix/news/2021-09-30_Digital_Infrastructure_Needs_and_Efficiency_Goals__34.pdf",true,true],
+  [2022,"Digital Realty Digital Seoul 1",37.57,126.98,"Seoul","South Korea","https://www.prnewswire.com/news-releases/digital-realty-opens-first-carrier-neutral-data-center-in-south-korea-301468189.html",true,true],
+  [2022,"Equinix Manchester MA5",53.48,-2.24,"Manchester","United Kingdom","https://newsroom.equinix.com/2022-11-23-UKs-Digital-Infrastructure-Boosted-by-179M-to-Meet-Evolving-Business-and-Consumer-Needs",true,true],
+  [2023,"Equinix Tokyo TY13x",35.68,139.69,"Tokyo","Japan","https://newsroom.equinix.com/press-releases?item=124839",false,true],
+  [2023,"Meta DeKalb Data Center",41.93,-88.75,"DeKalb, Illinois","United States","https://datacenters.atmeta.com/2023/11/dekalb-we-are-online/",false,true],
+  [2024,"CERN Prévessin Data Centre",46.255,6.082,"Prévessin-Moëns","France","https://home.cern/new-data-centre-cern/",false,true],
+  [2024,"Equinix Johannesburg JN1",-26.2,28.05,"Johannesburg","South Africa","https://newsroom.equinix.com/2024-10-24-Equinix-opens-its-first-data-center-in-Johannesburg-enhancing-digital-infrastructure-and-connectivity-in-the-region",true,true],
+  [2024,"Meta Gallatin Data Center",36.39,-86.45,"Gallatin, Tennessee","United States","https://datacenters.atmeta.com/2024/11/gallatin-we-are-online/",false,true],
+  [2025,"Equinix Jakarta IBX",-6.21,106.85,"Jakarta","Indonesia","https://newsroom.equinix.com/2025-05-15-Equinix-Unveils-Its-First-AI-Ready-Data-Center-with-Dense-Ecosystem-in-Jakarta",true,true],
+  [2025,"Meta Kansas City Data Center",39.1,-94.58,"Kansas City, Missouri","United States","https://about.fb.com/news/2025/08/metas-kansas-city-data-center/",false,true],
+  [2025,"Equinix Chennai CN1",13.08,80.27,"Chennai","India","https://newsroom.equinix.com/2025-09-19-Equinix-Opens-First-AI-Ready-Data-Center-in-Chennai",false,true]
+].map(([documented_by,name,lat,lon,city,country,source_url,colocation=false,approximate=false])=>({
+  p:{name,city,country,documented_by,source_url,colocation,approximate},c:[lon,lat],kind:'historical'
 }));
 const dotGeometry=new THREE.SphereGeometry(.014,8,6);
 function addSiteGroup(items,kind,color){
@@ -616,7 +630,8 @@ const parts=[];
 if(operator)parts.push('Operator: '+operator);
 if(raw.length)parts.push('Reported status: '+raw.join(', '));
 if(capacity)parts.push('Reported capacity: '+capacity+' MW');
-if(precision)parts.push('Location precision: '+precision);
+if(p.approximate)parts.push('Approximate map location');
+else if(precision)parts.push('Location precision: '+precision);
 if(asOf)parts.push('Observed: '+asOf);
 tipMore.textContent=parts.join(' · ');
 const url=safeUrl(first(p,['source_url','evidence_url','website','url']));
