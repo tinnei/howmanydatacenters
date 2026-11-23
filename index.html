@@ -25,11 +25,7 @@ footer{position:absolute;left:clamp(24px,5.5vw,94px);right:clamp(24px,5.5vw,94px
 a{color:#747774;text-decoration:none;border-bottom:1px solid #d5d7d5}
 a:hover{color:#242524;border-color:#242524}
 .control{font-size:10px;color:#a4a5a4;letter-spacing:.03em;white-space:nowrap}
-.history{width:min(360px,100%);min-width:0}
-.history-ticks{position:relative;display:grid;grid-template-columns:repeat(var(--ticks),minmax(0,1fr))}
-.history-actions{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:6px}
-.history-atlas{display:block;padding:4px 0;border:0;border-bottom:1px solid #d5d7d5;background:none;color:#686e6b;font:inherit;font-size:10px;cursor:pointer}
-.list-toggle{display:grid;place-items:center;width:28px;height:28px;border:1px solid #d5d7d5;border-radius:6px;background:#fff;color:#454b48;cursor:pointer}
+.list-toggle{display:grid;flex:none;place-items:center;width:28px;height:28px;border:1px solid #d5d7d5;border-radius:6px;background:#fff;color:#454b48;cursor:pointer}
 .list-toggle:hover{border-color:currentColor}
 .list-icon{width:15px;height:14px;background:radial-gradient(circle,currentColor 1px,transparent 1.4px) 0 0/4px 5px repeat-y,linear-gradient(currentColor,currentColor) 5px 2px/10px 1px no-repeat,linear-gradient(currentColor,currentColor) 5px 7px/10px 1px no-repeat,linear-gradient(currentColor,currentColor) 5px 12px/10px 1px no-repeat}
 .site-list-dialog{width:min(440px,calc(100% - 32px));max-height:min(65dvh,580px);padding:0;border:1px solid #d5d7d5;border-radius:8px;color:var(--ink);background:#fff}
@@ -45,19 +41,6 @@ a:hover{color:#242524;border-color:#242524}
 .site-list-location{grid-column:1}
 .site-list-status::before{content:"";display:inline-block;width:6px;height:6px;margin-right:5px;border-radius:50%;background:var(--site-color,#9aa7b6)}
 .site-list-empty{margin:0;padding:16px 18px;font-size:12px;color:#686e6b}
-.history-atlas[aria-pressed="true"]{color:var(--ink);border-bottom-color:currentColor;font-weight:650}
-.history-ticks::before{content:"";position:absolute;top:9px;left:calc(50% / var(--ticks));right:calc(50% / var(--ticks));border-top:1px solid #d5d9d7;pointer-events:none}
-.history-ticks button{position:relative;border:0;background:none;padding:6px 0 5px;color:#6d7471;cursor:pointer;font:inherit;font-size:10px;font-variant-numeric:tabular-nums}
-.history-ticks button::before{content:"";display:block;width:7px;height:7px;border-radius:50%;margin:0 auto 5px;background:#fff;border:1px solid #9da7a2}
-.history-ticks button[aria-pressed="true"]{color:#262726;font-weight:650}
-.history-ticks button[aria-pressed="true"]::before{background:#617572;border-color:#617572}
-.history-ticks button:hover::before{border-color:#262726}
-.history-ticks button:focus-visible{outline:1px solid #617572;outline-offset:-1px;border-radius:4px}
-.history-detail{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px;color:#454b48;font-size:11px;line-height:1.5}
-.history-event{margin:0;font-variant-numeric:tabular-nums}
-.history-source-menu{position:relative;flex:none;font-size:10px;color:#686e6b}
-.history-source-menu summary{cursor:pointer}
-.history-sources{position:absolute;right:0;bottom:calc(100% + 4px);display:grid;gap:6px;width:max-content;max-width:calc(100vw - 48px);padding:8px 10px;background:#fff;border:1px solid #d5d7d5;border-radius:6px}
 #tooltip{position:fixed;z-index:4;padding:15px 17px;background:#fff;border:1px solid #e8e8e8;box-shadow:0 10px 36px #22222213;border-radius:8px;width:min(285px,calc(100vw - 28px));pointer-events:none;opacity:0;transform:translateY(5px);transition:opacity .15s,transform .15s}
 #tooltip.visible{opacity:1;transform:translateY(0)}#tooltip.pinned{pointer-events:auto}#tooltip .close{display:none;position:absolute;top:7px;right:9px;background:none;border:0;color:#8b9290;font-size:18px;cursor:pointer}#tooltip.pinned .close{display:block}#tooltip .tag{font-size:10px;color:#6d7775;margin-bottom:8px}#tooltip .more{font-size:10px;color:#8c9491;line-height:1.7;margin-top:9px}#tooltip .more:empty{display:none}#tooltip a{font-size:10px;display:inline-block;margin-top:8px}
 #tooltip .tenants{margin-top:8px;font-size:10px;line-height:1.6;color:#686e6b}
@@ -68,7 +51,7 @@ a:hover{color:#242524;border-color:#242524}
 #status{display:flex;align-items:center;gap:6px;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11px;color:#a4a5a4;letter-spacing:.02em;z-index:2;pointer-events:none;white-space:nowrap}
 .globe-loader{display:block;flex:none}.globe-loader[hidden]{display:none}
 @media(prefers-reduced-motion:reduce){.globe-loader{display:none}}
-@media(max-width:680px){header{top:24px}h1{font-size:34px;line-height:.94;letter-spacing:-.045em}.sub{max-width:190px;font-size:11px}.metric{top:24px;bottom:auto;right:24px}.utc-clock{font-size:10px;margin-bottom:9px}.count{font-size:35px}footer{bottom:20px;flex-direction:column-reverse;gap:7px}.footnote{align-self:start;max-width:220px;font-size:9px}.control{display:none}}
+@media(max-width:680px){header{top:24px}h1{font-size:34px;line-height:.94;letter-spacing:-.045em}.sub{max-width:190px;font-size:11px}.metric{top:24px;bottom:auto;right:24px}.utc-clock{font-size:10px;margin-bottom:9px}.count{font-size:35px}footer{bottom:20px;gap:12px}.footnote{align-self:start;max-width:220px;font-size:9px}.control{display:none}}
 @media(max-width:440px){.metric{max-width:calc(100vw - 204px)}.count{font-size:clamp(24px,7.4vw,32px)}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
@@ -87,27 +70,8 @@ a:hover{color:#242524;border-color:#242524}
 <div id="status" role="status" aria-atomic="true"><img id="globe-loader" class="globe-loader" width="16" height="16" alt="" src="data:image/gif;base64,R0lGODlhGAAYAPIAAP///+ru7Nfe27rFwaCuqYSWj2l/eFNqZCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJCQAAACwAAAAAGAAYAAAD/wgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAHB4AACAAAAACAAAgAAAcHgAAIAAAAAIAACGZgAACAAQgQEAAAgAAIZmAAAIABCBAQAACAAAhgYAAAgAAIEBAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAFWAAAAACAAAgBABAAgAVYAAAAAIAACAEAEACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAhAQAAAgAAIICAAAIAACERAAACAAgggIAAAgAAFKERAAACAAgggIAAAgAAIAAADA4AACAAAAACAAAgAAAMDgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAJACH5BAkJAAAALAAAAAAYABgAAAP/CAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAYGgAAIAAAAAIAACAAABgaAAAgAAAAAgAAIVVAAAIAHCHBwAACAAAhVUAAAgAcIcHAAAIAACFBQAACAAAhwcAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgARIAAAAAIAACAEAEACABEgAAAAAgAAIAQAQAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACDAwAACAAAgQEAAAgAAIMzAAAIABCBAQAACAAAUoMzAAAIABCBAQAACAAAgAAAICgAAIAAAAAIAACAAAAgKAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAkAIfkECQkAAAAsAAAAABgAGAAAA/8IAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAABQWAAAgAAAAAgAAIAAAFBYAACAAAAACAAAhEQAAAgAYIYGAAAIAACERAAACABghgYAAAgAAIQEAAAIAACGBgAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAzgAAAAAgAAIBwBwAIADOAAAAACAAAgHAHAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIICAAAIAACBAQAACAAAgiIAAAgAEIEBAAAIAABSgiIAAAgAEIEBAAAIAACAAAAQGAAAgAAAAAgAAIAAABAYAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACQAh+QQJCQAAACwAAAAAGAAYAAAD/wgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAEBIAACAAAAACAAAgAAAQEgAAIAAAAAIAACDMwAACABQhQUAAAgAAIMzAAAIAFCFBQAACAAAgwMAAAgAAIUFAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIACKAAAAACAAAgGAGAAgAIoAAAAAIAACAYAYACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgQEAAAgAAIcHAAAIAACBEQAACABwhwcAAAgAAFKBEQAACABwhwcAAAgAAIAAABAYAACAAAAACAAAgAAAEBgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAJACH5BAkJAAAALAAAAAAYABgAAAP/CAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAMDgAAIAAAAAIAACAAAAwOAAAgAAAAAgAAIIiAAAIAECEBAAACAAAgiIAAAgAQIQEAAAIAACCAgAACAAAhAQAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAEYAAAAAIAACAUAUACAARgAAAAAgAAIBQBQAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACBAQAACAAAhgYAAAgAAIERAAAIAGCGBgAACAAAUoERAAAIAGCGBgAACAAAgAAAcHgAAIAAAAAIAACAAABweAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAkAIfkECQkAAAAsAAAAABgAGAAAA/8IAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAgKAAAgAAAAAgAAIAAACAoAACAAAAACAAAgREAAAgAMIMDAAAIAACBEQAACAAwgwMAAAgAAIEBAAAIAACDAwAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAARgAAAAAgAAIBABAAIABGAAAAACAAAgEAEAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIcHAAAIAACFBQAACAAAh3cAAAgAUIUFAAAIAABSh3cAAAgAUIUFAAAIAACAAABgaAAAgAAAAAgAAIAAAGBoAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACQAh+QQJCQAAACwAAAAAGAAYAAAD/wgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAABAYAACAAAAACAAAgAAAEBgAAIAAAAAIAACBEQAACAAgggIAAAgAAIERAAAIACCCAgAACAAAgQEAAAgAAIICAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAHeAAAAACAAAgDADAAgAd4AAAAAIAACAMAMACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAhgYAAAgAAIQEAAAIAACGZgAACABAhAQAAAgAAFKGZgAACABAhAQAAAgAAIAAAFBYAACAAAAACAAAgAAAUFgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAJACH5BAkJAAAALAAAAAAYABgAAAP/CAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAEBgAAIAAAAAIAACAAAAQGAAAgAAAAAgAAId3AAAIABCBAQAACAAAh3cAAAgAEIEBAAAIAACHBwAACAAAgQEAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAZoAAAAAIAACAIAIACABmgAAAAAgAAIAgAgAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACFBQAACAAAgwMAAAgAAIVVAAAIADCDAwAACAAAUoVVAAAIADCDAwAACAAAgAAAQEgAAIAAAAAIAACAAABASAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAgAAIAAAAAIAACAAAAACAAAgAAAAAkAOw=="><span id="globe-status-text">Loading globe…</span></div>
 <div id="tooltip" role="status"><button class="close" id="tipclose" aria-label="Close site details">×</button><div class="tag" id="tipstatus"></div><strong id="tipname"></strong><span id="tipdetail"></span><div class="more" id="tipmore"></div><div class="tenants"><b>Publicly confirmed tenants</b><div id="tiptenants"></div></div><a id="tipsource" target="_blank" rel="noopener noreferrer" hidden>View source</a></div>
 <footer>
-<div class="footnote">Data: <a href="https://github.com/kiankyars/datacenter-atlas" target="_blank" rel="noopener noreferrer">Data Center Atlas</a> · CC BY 4.0 · <span style="color:#2474dc">●</span> operating · <span style="color:#b6d8fa">●</span> upcoming · <span style="color:#9aa7b6">●</span> unverified<span id="historical-colocation-key" hidden> · <span style="color:#b56524">●</span> operating colocation</span></div>
-<section class="history" aria-label="Data center history">
-  <div class="history-detail">
-    <p id="history-event" class="history-event" aria-live="polite"></p>
-    <details id="history-source-menu" class="history-source-menu">
-      <summary>Sources</summary>
-      <div class="history-sources">
-        <a id="history-source" target="_blank" rel="noopener noreferrer" hidden></a>
-        <a id="history-count-source" target="_blank" rel="noopener noreferrer" hidden></a>
-        <a id="history-archive-source" target="_blank" rel="noopener noreferrer" hidden></a>
-      </div>
-    </details>
-  </div>
-  <div id="history-ticks">
-    <div class="history-ticks" id="history-recent" role="group" aria-label="Recent snapshots"></div>
-    <div class="history-actions">
-      <button type="button" class="history-atlas" id="history-atlas">Browse current Atlas</button>
-      <button type="button" class="list-toggle" id="site-list-toggle" aria-label="Show site list" title="Show site list" aria-haspopup="dialog" aria-controls="site-list-dialog"><span class="list-icon" aria-hidden="true"></span></button>
-    </div>
-  </div>
-</section>
+<div class="footnote">Data: <a href="https://github.com/kiankyars/datacenter-atlas" target="_blank" rel="noopener noreferrer">Data Center Atlas</a> · CC BY 4.0 · <span style="color:#2474dc">●</span> operating · <span style="color:#b6d8fa">●</span> upcoming · <span style="color:#9aa7b6">●</span> unverified</div>
+<button type="button" class="list-toggle" id="site-list-toggle" aria-label="Show site list" title="Show site list" aria-haspopup="dialog" aria-controls="site-list-dialog"><span class="list-icon" aria-hidden="true"></span></button>
 </footer>
 <dialog class="site-list-dialog" id="site-list-dialog" aria-labelledby="site-list-title">
   <div class="site-list-header">
@@ -117,85 +81,6 @@ a:hover{color:#242524;border-color:#242524}
   <ul class="site-list-items" id="site-list-items" role="list"></ul>
   <p class="site-list-empty" id="site-list-empty" hidden></p>
 </dialog>
-<script>
-{
-  const snapshots = [
-    [2021, 'September 2021 snapshot'],
-    [2022, 'December 2022 snapshot'],
-    [2023, 'December 2023 snapshot'],
-    [2024, 'December 2024 snapshot'],
-    [2025, 'December 2025 snapshot'],
-    [2026, '2026 snapshot', 'International Energy Agency', 'https://www.iea.org/news/data-centre-electricity-use-surged-in-2025-even-with-tightening-bottlenecks-driving-a-scramble-for-solutions'],
-    ['Now', 'Current Atlas map', 'Data Center Atlas', 'https://github.com/kiankyars/datacenter-atlas']
-  ];
-  // Published snapshots have different coverage. Each number stays with its own scope.
-  const countSnapshots = new Map([
-    [2021, {
-      value: '700',
-      publisher: 'Synergy Research Group',
-      url: 'https://www.srgresearch.com/articles/as-hyperscale-data-center-capacity-doubles-in-under-four-years-the-us-still-accounts-for-half-of-the-total'
-    }],
-    [2023, {
-      value: '992',
-      publisher: 'Synergy Research Group',
-      url: 'https://www.srgresearch.com/articles/hyperscale-data-centers-hit-the-thousand-mark-total-capacity-is-doubling-every-four-years'
-    }],
-    [2024, {
-      value: '1,136',
-      publisher: 'Synergy Research Group',
-      url: 'https://www.srgresearch.com/articles/hyperscale-data-center-count-hits-1136-average-size-increases-us-accounts-for-54-of-total-capacity'
-    }],
-    [2025, {
-      value: '1,360',
-      publisher: 'Synergy Research Group',
-      url: 'https://www.srgresearch.com/articles/hyperscale-operators-to-account-for-67-of-all-data-center-capacity-by-2031'
-    }]
-  ]);
-  const archiveMonths = new Map([[2021,'2021/09'],[2022,'2022/12'],[2023,'2023/12'],[2024,'2024/12'],[2025,'2025/12'],[2026,'2026/11']]);
-  const ticks = document.getElementById('history-ticks');
-  const recentTicks = document.getElementById('history-recent');
-  const archiveSource = document.getElementById('history-archive-source');
-  const event = document.getElementById('history-event');
-  const sourceMenu = document.getElementById('history-source-menu');
-  const source = document.getElementById('history-source');
-  const countSource = document.getElementById('history-count-source');
-  recentTicks.style.setProperty('--ticks', archiveMonths.size);
-  let selectedTick;
-  const buttons = snapshots.map(([year, description, publisher, url]) => {
-    const atlas = year === 'Now';
-    const button = atlas ? document.getElementById('history-atlas') : document.createElement('button');
-    button.type = 'button';
-    if(!atlas)button.textContent = year;
-    const archiveMonth = archiveMonths.get(year);
-    button.setAttribute('aria-pressed', 'false');
-    button.addEventListener('click', () => {
-      selectedTick?.setAttribute('aria-pressed', 'false');
-      button.setAttribute('aria-pressed', 'true');
-      selectedTick = button;
-      const snapshot = countSnapshots.get(year);
-      event.textContent = snapshot ? snapshot.value + ' hyperscale data centers worldwide' : description;
-      sourceMenu.open = false;
-      source.hidden = !url;
-      source.textContent = publisher ?? '';
-      if(url)source.href = url;
-      archiveSource.hidden = !archiveMonth;
-      if(archiveMonth){
-        archiveSource.href = 'https://data.caida.org/datasets/peeringdb-v2/' + archiveMonth + '/';
-        archiveSource.textContent = 'PeeringDB facility archive (CAIDA)';
-      }
-      countSource.hidden = !snapshot;
-      if(snapshot){
-        countSource.textContent = snapshot.publisher;
-        countSource.href = snapshot.url;
-      }
-      ticks.dispatchEvent(new CustomEvent('milestonechange', {detail: {year}}));
-    });
-    if(!atlas)recentTicks.appendChild(button);
-    return button;
-  });
-  buttons[0].click();
-}
-</script>
 <script type="module">
 const root=document.getElementById('globe');
 const loader=document.getElementById('globe-loader');
@@ -252,7 +137,6 @@ controls.autoRotate=!reducedMotion.matches;controls.autoRotateSpeed=.18;
 controls.target.set(0,0,0);
 function xyz(lat,lon,r=R){const a=(90-lat)*Math.PI/180,b=(lon+180)*Math.PI/180;return new THREE.Vector3(-r*Math.sin(a)*Math.cos(b),r*Math.cos(a),r*Math.sin(a)*Math.sin(b));}
 const markerBlue=0x2474dc;
-const colocationColor=0xb56524;
 function makePulse(radius){
   const pulse=new THREE.Mesh(
     new THREE.CircleGeometry(radius,32),
@@ -271,11 +155,11 @@ function animatePulse(pulse,elapsed,duration){
 const landDots=new THREE.Group();globe.add(landDots);
 const continentOutlines=new Map();
 let continentPolygons=[],countryContinents=new Map(),landMesh=null,landContinentIds=[],landPositions=[],siteGroups=[],activeContinent=null,siteTotal=null;
-let selectedYear='Now', liveSiteStatus='', sitesLoading=false;
+let liveSiteStatus='', sitesLoading=false;
 let landLoading=true, landFailed=false;
 function updateGlobeStatus(){
   if(landLoading)setGlobeStatus('Loading globe…',true);
-  else if(selectedYear==='Now'&&liveSiteStatus)setGlobeStatus(liveSiteStatus,sitesLoading);
+  else if(liveSiteStatus)setGlobeStatus(liveSiteStatus,sitesLoading);
   else setGlobeStatus(landFailed?'Globe map unavailable':'');
 }
 function continentAt(lon,lat,country){
@@ -286,50 +170,30 @@ if(inPolygon(lon,lat,item.poly))return item.continent;
 // The source country keeps coastal and island sites classifiable at this map's resolution.
 return countryContinents.get(String(country??'').trim().toLowerCase())||'';
 }
-function sitesInView(regional=false){
-  const historical=selectedYear!=='Now';
-  return siteGroups.filter(group=>group.historical===historical)
-    .flatMap(group=>group.items.slice(0,group.mesh.count))
-    .filter(site=>!regional||!activeContinent||site.continent===activeContinent);
+function sitesInView(){
+  return siteGroups.flatMap(group=>group.items)
+    .filter(site=>!activeContinent||site.continent===activeContinent);
 }
 function updateCount(){
   const count=document.getElementById('count');
   const total=document.getElementById('countTotal');
   const unit=document.querySelector('.unit');
-  const historical=selectedYear!=='Now';
-  const worldwide=sitesInView();
-  const regional=sitesInView(true);
   updateGlobeStatus();
   if(siteListDialog.open)renderSiteList();
-  document.getElementById('historical-colocation-key').hidden=!historical||!worldwide.some(({p})=>p.colocation);
-  const scope=activeContinent?' in '+activeContinent:'';
-  const available=historical||siteTotal!==null;
-  total.hidden=!available;
-  count.textContent=available?regional.length.toLocaleString():'—';
-  if(available)document.getElementById('totalCount').textContent=worldwide.length.toLocaleString();
-  if(historical){
-    const upcoming=regional.filter(({p})=>p.upcoming).length;
-    unit.textContent=(regional.length-upcoming)+' operating · '+upcoming+' upcoming · historical sample'+scope;
-  }else{
-    unit.textContent='mapped sites'+scope;
-  }
+  total.hidden=siteTotal===null;
+  count.textContent=siteTotal===null?'—':sitesInView().length.toLocaleString();
+  if(siteTotal!==null)document.getElementById('totalCount').textContent=siteTotal.toLocaleString();
+  unit.textContent=activeContinent?'mapped sites in '+activeContinent:'mapped sites';
 }
 const mutedSiteColor=new THREE.Color(0xdce1e3);
 const activeSiteColor=new THREE.Color();
 function updateSiteColors(){
-  for(const group of siteGroups){
-    if(!group.mesh.visible)continue;
-    const {mesh,items,color,historical}=group;
+  for(const {mesh,items,color} of siteGroups){
+    activeSiteColor.setHex(color);
     for(let i=0;i<mesh.count;i++){
-      const {p,continent}=items[i];
-      if(activeContinent&&continent!==activeContinent){
-        mesh.setColorAt(i,mutedSiteColor);
-      }else{
-        activeSiteColor.setHex(historical&&p.colocation?colocationColor:historical&&!p.upcoming?markerBlue:color);
-        mesh.setColorAt(i,activeSiteColor);
-      }
+      mesh.setColorAt(i,activeContinent&&items[i].continent!==activeContinent?mutedSiteColor:activeSiteColor);
     }
-    if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+    mesh.instanceColor.needsUpdate=true;
   }
 }
 function updateFocus(){
@@ -442,38 +306,6 @@ activeContinent=null;updateFocus();
 }
 const pins=new THREE.Group();globe.add(pins);
 const dots=[],records=[];
-// Facilities with a documented opening or first operating year, in chronological order.
-// Coordinates mark the site or, where only a campus is identified, its approximate location.
-const historicalSites=[
-  [1973,'CERN Meyrin Computer Centre',46.235,6.050,'Meyrin','Switzerland','https://cds.cern.ch/record/1177861/files/CERN-2006-004.pdf?version=1'],
-  [1989,'Telehouse Teleport',40.60,-74.18,'Staten Island, New York','United States','https://www.telehouse.com/about-us/company-overview/history/',true],
-  [1990,'Telehouse North',51.511,-0.002,'London','United Kingdom','https://www.telehouse.net/wp-content/uploads/2023/09/Telehouse-North-Fact-Sheet.pdf',true],
-  [1996,'Telehouse Jeûneurs',48.87,2.34,'Paris','France','https://www.telehouse.com/about-us/company-overview/history/',true],
-  [1998,'Telehouse Los Angeles Center',34.048,-118.255,'Los Angeles, California','United States','https://www.telehouse.com/about-us/company-overview/history/',true],
-  [1999,'Equinix first IBX facility',39.016,-77.460,'Ashburn, Virginia','United States','https://investor.equinix.com/sec-filings/all-sec-filings/content/0001012870-99-004804/0001012870-99-004804.pdf',true],
-  [2011,'Facebook Prineville Data Center',44.301,-120.872,'Prineville, Oregon','United States','https://about.fb.com/news/2011/04/facebook-launches-open-compute-project/'],
-  [2013,'Facebook Luleå Data Center',65.617,22.135,'Luleå','Sweden','https://about.fb.com/news/2013/06/data-center-update-lulea-goes-live/'],
-  [2013,'Google Singapore Data Center',1.367,103.694,'Jurong West','Singapore','https://www.datacenters.google/locations/singapore/'],
-  [2020,"Google Fredericia Data Center",55.57,9.75,"Fredericia","Denmark","https://blog.google/company-news/inside-google/around-the-globe/google-europe/data-centers-europe-green-economic-recovery/",false,true],
-  [2020,"Google Middenmeer Data Center",52.81,4.99,"Middenmeer","Netherlands","https://blog.google/company-news/inside-google/around-the-globe/google-europe/data-centers-europe-green-economic-recovery/",false,true],
-  [2021,"Meta Eagle Mountain Data Center",40.31,-112.01,"Eagle Mountain, Utah","United States","https://datacenters.atmeta.com/2021/07/utah-county-we-are-online/",false,true],
-  [2021,"Equinix Frankfurt FR8",50.11,8.68,"Frankfurt","Germany","https://d1io3yog0oux5.cloudfront.net/_930b224051bfc4f068c930283bb6bc93/equinix/news/2021-09-30_Digital_Infrastructure_Needs_and_Efficiency_Goals__34.pdf",true,true],
-  [2022,"Digital Realty Digital Seoul 1",37.57,126.98,"Seoul","South Korea","https://www.prnewswire.com/news-releases/digital-realty-opens-first-carrier-neutral-data-center-in-south-korea-301468189.html",true,true],
-  [2022,"Equinix Manchester MA5",53.48,-2.24,"Manchester","United Kingdom","https://newsroom.equinix.com/2022-11-23-UKs-Digital-Infrastructure-Boosted-by-179M-to-Meet-Evolving-Business-and-Consumer-Needs",true,true],
-  [2023,"Equinix Tokyo TY13x",35.68,139.69,"Tokyo","Japan","https://newsroom.equinix.com/press-releases?item=124839",false,true],
-  [2023,"Meta DeKalb Data Center",41.93,-88.75,"DeKalb, Illinois","United States","https://datacenters.atmeta.com/2023/11/dekalb-we-are-online/",false,true],
-  [2024,"CERN Prévessin Data Centre",46.255,6.082,"Prévessin-Moëns","France","https://home.cern/new-data-centre-cern/",false,true],
-  [2024,"Equinix Johannesburg JN1",-26.2,28.05,"Johannesburg","South Africa","https://newsroom.equinix.com/2024-10-24-Equinix-opens-its-first-data-center-in-Johannesburg-enhancing-digital-infrastructure-and-connectivity-in-the-region",true,true],
-  [2024,"Meta Gallatin Data Center",36.39,-86.45,"Gallatin, Tennessee","United States","https://datacenters.atmeta.com/2024/11/gallatin-we-are-online/",false,true],
-  [2025,"Equinix Jakarta IBX",-6.21,106.85,"Jakarta","Indonesia","https://newsroom.equinix.com/2025-05-15-Equinix-Unveils-Its-First-AI-Ready-Data-Center-with-Dense-Ecosystem-in-Jakarta",true,true],
-  [2025,"Meta Kansas City Data Center",39.1,-94.58,"Kansas City, Missouri","United States","https://about.fb.com/news/2025/08/metas-kansas-city-data-center/",false,true],
-  [2025,"Equinix Chennai CN1",13.08,80.27,"Chennai","India","https://newsroom.equinix.com/2025-09-19-Equinix-Opens-First-AI-Ready-Data-Center-in-Chennai",false,true],
-  [2026,"Microsoft Fairwater Mount Pleasant",42.70,-87.90,"Mount Pleasant, Wisconsin","United States","https://news.microsoft.com/source/2026/06/23/microsoft-completes-construction-on-first-datacenter-facility-in-mount-pleasant-wisconsin/",false,true],
-  [2026,"Meta Temple Data Center",31.10,-97.34,"Temple, Texas","United States","https://datacenters.atmeta.com/2026/07/temple-we-are-online/",false,true],
-  [2026,"Equinix Singapore SG6",1.34,103.70,"Singapore","Singapore","https://newsroom.equinix.com/2026-11-06-Equinix-Opens-SG6-to-Support-Singapores-Digital-Future-and-Strengthen-Its-Role-as-a-Global-Innovation-Hub",true,true]
-].map(([documented_by,name,lat,lon,city,country,source_url,colocation=false,approximate=false])=>({
-  p:{name,city,country,documented_by,source_url,colocation,approximate},c:[lon,lat],kind:'historical'
-}));
 const dotGeometry=new THREE.SphereGeometry(.014,8,6);
 function addSiteGroup(items,kind,color){
   const mesh=new THREE.InstancedMesh(dotGeometry,new THREE.MeshBasicMaterial({color}),items.length);
@@ -487,63 +319,7 @@ function addSiteGroup(items,kind,color){
   pins.add(mesh);
   dots.push(mesh);
   records.push(items.map(({p})=>({...p,_kind:kind})));
-  const group={mesh,items,color,historical:kind==='historical'};
-  siteGroups.push(group);
-  return group;
-}
-const historicalGroup=addSiteGroup(historicalSites,'historical',0xffffff);
-historicalSites.forEach(({p},index)=>{
-  historicalGroup.mesh.setColorAt(index,new THREE.Color(p.colocation?colocationColor:markerBlue));
-});
-historicalGroup.mesh.instanceColor.needsUpdate=true;
-historicalGroup.mesh.computeBoundingSphere();
-historicalGroup.mesh.visible=false;
-
-// Record when a project was announced and when it is first documented as operating.
-const historicalPlans=[
-  [2020,'Meta Gallatin Data Center','https://datacenters.atmeta.com/2020/08/hello-gallatin/'],
-  [2022,'Meta Kansas City Data Center','https://about.fb.com/news/2025/08/metas-kansas-city-data-center/'],
-  [2022,'Equinix Johannesburg JN1','https://newsroom.equinix.com/2022-12-13-Equinix-to-Enter-South-Africa-with-US-160M-Data-Centre-Investment-in-Johannesburg'],
-  [2024,'Microsoft Fairwater Mount Pleasant','https://news.microsoft.com/source/2026/06/23/microsoft-completes-construction-on-first-datacenter-facility-in-mount-pleasant-wisconsin/']
-].map(([announced,name,source_url])=>{
-  const site=historicalSites.find(item=>item.p.name===name);
-  return {...site,p:{...site.p,announced,source_url,colocation:false,upcoming:true}};
-});
-historicalPlans.push({
-  c:[-91.6360844,32.5289242],
-  p:{site_id:'vcc-site-33110c77390f92dc4432',name:'Meta Richland Parish Data Center',city:'Richland Parish, Louisiana',country:'United States',announced:2025,
-    upcoming:true,approximate:true,source_url:'https://about.fb.com/news/2025/10/meta-blue-owl-capital-develop-hyperion-data-center/'}
-},{
-  c:[-97.0142789,30.9998837],
-  p:{site_id:'vcc-site-00432e4e9c8e2d91ff76',name:'Stargate Milam County (SB Energy campus)',city:'Milam County, Texas',country:'United States',announced:2026,
-    upcoming:true,approximate:true,source_url:'https://sbenergy.com/openai-and-softbank-group-partner-with-sb-energy/'}
-},{
-  c:[-95.99,36.15],
-  p:{name:'Meta Tulsa Data Center',city:'Tulsa, Oklahoma',country:'United States',announced:2026,
-    upcoming:true,approximate:true,source_url:'https://about.fb.com/news/2026/04/breaking-ground-new-ai-optimized-data-center-tulsa-oklahoma/'}
-});
-const historicalUpcomingGroup=addSiteGroup(historicalPlans,'historical',0xb6d8fa);
-historicalUpcomingGroup.mesh.material.color.setHex(0xffffff);
-const upcomingRecordIndex=records.length-1;
-const upcomingMarker=new THREE.Object3D();
-historicalUpcomingGroup.mesh.visible=false;
-
-function setHistoricalUpcoming(year){
-  const plans=year==='Now'?[]:historicalPlans.filter(({p})=>
-    p.announced<=year && (p.documented_by===undefined || year<p.documented_by));
-  const {mesh}=historicalUpcomingGroup;
-  historicalUpcomingGroup.items=plans;
-  records[upcomingRecordIndex]=plans.map((item,i)=>{
-    const {p,c}=item;
-    item.continent=continentAt(+c[0],+c[1],p.country||p.country_name);
-    upcomingMarker.position.copy(xyz(+c[1],+c[0],R+.025));
-    upcomingMarker.updateMatrix();
-    mesh.setMatrixAt(i,upcomingMarker.matrix);
-    return {...p,_kind:'historical'};
-  });
-  mesh.count=plans.length;
-  mesh.instanceMatrix.needsUpdate=true;
-  if(mesh.count)mesh.computeBoundingSphere();
+  siteGroups.push({mesh,items,color});
 }
 function coordinate(geom){if(!geom)return null;if(geom.type==='Point')return geom.coordinates;if(geom.type==='MultiPoint')return geom.coordinates?.[0];if(geom.type==='Polygon')return average(geom.coordinates?.[0]);if(geom.type==='MultiPolygon')return average(geom.coordinates?.[0]?.[0]);return null;}
 function average(coords){if(!Array.isArray(coords)||!coords.length)return null;let x=0,y=0,n=0;for(const c of coords){if(Array.isArray(c)&&Number.isFinite(+c[0])&&Number.isFinite(+c[1])){x+=+c[0];y+=+c[1];n++;}}return n?[x/n,y/n]:null;}
@@ -596,7 +372,7 @@ groups[kind].push({p,c,kind,continent:continentAt(+c[0],+c[1],p.country||p.count
 const colors={existing:0x2474dc,upcoming:0xb6d8fa,unknown:0x9aa7b6};
 for(const kind of ['existing','upcoming','unknown']){
 const entries=groups[kind];if(!entries.length)continue;
-addSiteGroup(entries,kind,colors[kind]).mesh.visible=selectedYear==='Now';
+addSiteGroup(entries,kind,colors[kind]);
 }
 siteTotal=Object.values(groups).reduce((n,items)=>n+items.length,0);
 liveSiteStatus='';
@@ -654,7 +430,7 @@ function showSitePulse(hit){
   instancePosition.setFromMatrixPosition(instanceMatrix);
   mesh.localToWorld(instancePosition);
   sitePulse.position.copy(instancePosition);
-  sitePulse.material.color.setHex(hit.p.upcoming||hit.p._kind==='upcoming'?0x78aee9:hit.p.colocation?colocationColor:markerBlue);
+  sitePulse.material.color.setHex(hit.p._kind==='upcoming'?0x78aee9:markerBlue);
   sitePulseStart=performance.now();
   sitePulse.visible=true;
 }
@@ -687,8 +463,8 @@ showSitePulse(hit);
 const p=hit.p;
 tipName.textContent=label(p);
 tipDetail.textContent=display(p);
-tipStatus.textContent=p.upcoming?'● Upcoming · announced '+p.announced:p._kind==='historical'?(p.colocation?'● Operating colocation · documented by ':'● Operating · documented by ')+p.documented_by:p._kind==='existing'?'● Operating':p._kind==='upcoming'?'● Upcoming':'● Status unverified';
-tipStatus.style.color=p.upcoming?'#527bad':p.colocation?'#b56524':p._kind==='historical'||p._kind==='existing'?'#2474dc':p._kind==='upcoming'?'#78aee9':'#8996a4';
+tipStatus.textContent=p._kind==='existing'?'● Operating':p._kind==='upcoming'?'● Upcoming':'● Status unverified';
+tipStatus.style.color=p._kind==='existing'?'#2474dc':p._kind==='upcoming'?'#78aee9':'#8996a4';
 const raw=statusList(p).map(clean).filter(Boolean).map(v=>v.replaceAll('_',' '));
 const asOf=first(p,['newest_status_as_of','status_as_of','last_verified','observation_date']);
 const operator=first(p,['operator','operator_name','company','owner','owner_name']);
@@ -732,13 +508,12 @@ const siteListEmpty=document.getElementById('site-list-empty');
 const siteListToggle=document.getElementById('site-list-toggle');
 
 function renderSiteList(){
-  const historical=selectedYear!=='Now';
-  const sites=sitesInView(true);
+  const sites=sitesInView();
   sites.sort((a,b)=>label(a.p).localeCompare(label(b.p)));
-  const scope=(historical?selectedYear+' historical sample':'Current Atlas')+' · '+(activeContinent||'Worldwide');
+  const scope='Current Atlas · '+(activeContinent||'Worldwide');
   siteListSummary.textContent=scope+' · '+sites.length.toLocaleString()+' '+(sites.length===1?'site':'sites');
   siteListEmpty.hidden=sites.length>0;
-  siteListEmpty.textContent=!historical&&liveSiteStatus?liveSiteStatus:'No sites in this view.';
+  siteListEmpty.textContent=liveSiteStatus||'No sites in this view.';
   const rows=document.createDocumentFragment();
   for(const {p,kind} of sites){
     const row=document.createElement('li');
@@ -753,12 +528,12 @@ function renderSiteList(){
     }
     const status=document.createElement('span');
     status.className='site-list-status';
-    if(p.upcoming||kind==='upcoming'){
+    if(kind==='upcoming'){
       status.textContent='Upcoming';
       status.style.setProperty('--site-color','#b6d8fa');
-    }else if(kind==='historical'||kind==='existing'){
-      status.textContent=p.colocation?'Operating colocation':'Operating';
-      status.style.setProperty('--site-color',p.colocation?'#b56524':'#2474dc');
+    }else if(kind==='existing'){
+      status.textContent='Operating';
+      status.style.setProperty('--site-color','#2474dc');
     }else{
       status.textContent='Unverified';
     }
@@ -780,20 +555,8 @@ siteListDialog.addEventListener('close',()=>siteListToggle.focus());
 addEventListener('keydown',e=>{if(e.key==='Escape')hide();});
 function resize(){const w=innerWidth,h=innerHeight;camera.aspect=w/h;camera.fov=w<690?48:36;camera.updateProjectionMatrix();const headerTop=document.querySelector('header').getBoundingClientRect().top;const footerTop=document.querySelector(w<=680?'footer':'.footnote').getBoundingClientRect().top;const available=Math.max(240,footerTop-headerTop-24);const desired=Math.max(160,Math.min(h*.72,available)-60);const fov=camera.fov*Math.PI/180;const distance=R/Math.sin(Math.atan(desired/h*Math.tan(fov/2)*2));camera.position.setLength(Math.max(5.95,distance));controls.minDistance=2.8;renderer.setSize(w,h);}
 addEventListener('resize',resize);resize();
-const timelineTicks=document.getElementById('history-ticks');
-timelineTicks.addEventListener('milestonechange',({detail:{year}})=>{
-  selectedYear=year;
-  const historical=year!=='Now';
-  historicalGroup.mesh.count=historical?historicalSites.filter(({p})=>p.documented_by<=year).length:0;
-  setHistoricalUpcoming(year);
-  for(const group of siteGroups)group.mesh.visible=group.historical===historical;
-  updateSiteColors();
-  hide();
-  updateCount();
-  if(!historical)loadSites();
-});
-timelineTicks.querySelector('[aria-pressed="true"]')?.click();
 land();
+loadSites();
 let frame=0;
 (function animate(time=performance.now()){
   requestAnimationFrame(animate);
